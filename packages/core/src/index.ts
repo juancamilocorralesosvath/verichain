@@ -4,3 +4,6 @@
  * el PoW y la verificación de la cadena.
  */
 export const CORE_VERSION = '0.1.0';
+
+export { CAMPOS_PERSONA, type FilaPersona } from './tipos.js';
+export { serializarPersona } from './canonico.js';
