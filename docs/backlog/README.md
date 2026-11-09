@@ -22,7 +22,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H0.2](H0.2-agents-y-config.md)                 | AGENTS.md, CLAUDE.md y configuración                                | H0.1                                     | hecha     | Claude      |
 | [H0.3](H0.3-backlog.md)                         | Backlog de historias                                                | H0.2                                     | hecha     | Claude      |
 | [H1.1](H1.1-serializacion-canonica.md)          | Serialización canónica                                              | H0.1                                     | hecha     | Juan Camilo |
-| [H1.2](H1.2-hashes-y-genesis.md)                | Hashes SHA-256 y bloque génesis                                     | H1.1                                     | pendiente |             |
+| [H1.2](H1.2-hashes-y-genesis.md)                | Hashes SHA-256 y bloque génesis                                     | H1.1                                     | en-curso  | Juan Camilo |
 | [H1.3](H1.3-prueba-de-trabajo.md)               | Prueba de trabajo (minado)                                          | H1.2                                     | pendiente |             |
 | [H1.4](H1.4-verificacion-de-cadena.md)          | Verificación completa de la cadena                                  | H1.3                                     | pendiente |             |
 | [H2.1](H2.1-api-base.md)                        | API NestJS base con seguridad por defecto                           | H0.1                                     | pendiente |             |
