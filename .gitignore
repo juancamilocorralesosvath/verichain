@@ -1,0 +1,31 @@
+# Dependencias y builds
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Secretos — NUNCA al repo
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+!**/test/fixtures/**/*.pem
+
+# Base de datos y snapshots de la demo
+*.db
+*.db-journal
+*.sqlite
+data/
+
+# Editor / SO
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Material del curso (no es parte del código)
+Ciberseguridad 251.pdf
