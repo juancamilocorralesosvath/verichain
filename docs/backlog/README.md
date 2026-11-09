@@ -2,7 +2,7 @@
 
 Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpowers/specs/`](../superpowers/specs/2026-11-09-blockchain-integridad-design.md).
 
-**Cómo tomar una historia:** `git pull` → elige una `pendiente` con todas sus dependencias en `hecha` → cambia `estado`, `tomada_por` y `fecha` en su archivo **y** en esta tabla → commit + push → rama `h<épica>-<n>-<slug>`.
+**Cómo tomar una historia:** `git switch main && git pull` → elige una `pendiente` con todas sus dependencias en `hecha` → crea la rama `h<épica>-<n>-<slug>` desde `main` → en su primer commit cambia `estado`, `tomada_por` y `fecha` en su archivo **y** en esta tabla → `git push -u` y PR en borrador. Se mezcla a `main` solo por PR; nunca se pushea directo a `main`.
 
 ## Disponibles ahora
 
