@@ -11,16 +11,18 @@ Equipo: Juan Camilo y Alexis. No hay tareas fijas: cada sesión toma historias d
 
 ## Flujo de trabajo
 
-1. `git pull` en `main`.
+> **Nunca se trabaja ni se hace push directo a `main`.** Cada historia = una rama = un Pull Request. `main` solo recibe cambios mezclando un PR.
+
+1. `git switch main && git pull`: parte siempre de `main` actualizado.
 2. Elige una historia con `estado: pendiente` cuyas dependencias (`depende_de`) estén todas en `hecha`.
-   - Si una historia está `en-curso` **sin** `tomada_por`, quedó a medias: puedes retomarla desde su rama y sus notas.
+   - Si una historia está `en-curso` **sin** `tomada_por`, quedó a medias: puedes retomarla desde su rama (y su PR en borrador) y sus notas.
    - Si está `en-curso` **con** dueño, no la toques.
-3. **Reclámala antes de empezar:** pon `estado: en-curso`, `tomada_por: <nombre>` y `fecha: AAAA-MM-DD`, actualiza la fila del tablero y haz commit + push a `main` (`chore(backlog): tomar H1.2`).
-4. Crea la rama `h<epica>-<n>-<slug>`, por ejemplo `h1-2-hashes`.
-5. Implementa **solo** lo que dice la historia. Respeta "Fuera de alcance".
+3. Crea la rama **desde `main`**: `git switch -c h<epica>-<n>-<slug>`, por ejemplo `h1-3-pow`.
+4. **Reclámala en el primer commit de la rama:** pon `estado: en-curso`, `tomada_por: <nombre>` y `fecha: AAAA-MM-DD`, actualiza la fila del tablero y haz commit (`chore(backlog): tomar H1.3`). Luego `git push -u origin <rama>` y abre un **PR en borrador** (`gh pr create --draft`): así el otro ve que la historia está tomada.
+5. Implementa **solo** lo que dice la historia (pruebas primero). Respeta "Fuera de alcance".
 6. Corre la sección "Verificación" de la historia **y** `npm run check`. Todo en verde.
-7. Pon `estado: hecha`, actualiza el tablero, mezcla a `main` y haz push. **`main` siempre debe funcionar.**
-8. **Si no terminas:** escribe "Notas de traspaso" en el archivo de la historia (qué quedó, qué falta, qué se rompió, comandos útiles), borra `tomada_por`, deja `estado: en-curso` y haz push de la rama.
+7. En la misma rama, pon `estado: hecha` y actualiza el tablero (commit), haz push, marca el PR como listo (`gh pr ready`) y mézclalo con `gh pr merge --merge`. Título del PR: `feat(core): ... (H1.3)`; cuerpo con resumen y verificación. **`main` siempre debe funcionar.**
+8. **Si no terminas:** escribe "Notas de traspaso" en el archivo de la historia (qué quedó, qué falta, qué se rompió, comandos útiles), borra `tomada_por`, deja `estado: en-curso` y haz push de la rama; el PR queda en borrador.
 
 ## Reglas para el agente
 

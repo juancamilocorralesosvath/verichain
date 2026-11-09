@@ -209,8 +209,8 @@ El equipo son 2 personas (Juan Camilo y Alexis). **Nadie tiene tareas fijas**: q
 - **El backlog vive en el repo:** `docs/backlog/`, con un archivo por historia (`H1.2-serializacion-canonica.md`) y frontmatter:
   - `id`, `epica`, `depende_de: [..]`, `estado: pendiente | en-curso | hecha`, `tomada_por`, `fecha`.
   - `docs/backlog/README.md` tiene el tablero resumido y el grafo de dependencias.
-- **Tomar una historia** = `git pull` → ponerla en `en-curso` con tu nombre → commit + push **antes** de empezar. Solo se toman historias cuyas dependencias ya estén en `hecha`. Si los dos trabajan el mismo día, cada uno toma una historia distinta que no dependa de la otra (el grafo muestra cuáles van en paralelo).
-- **Una rama por historia** (`h1-2-serializacion-canonica`). Se mezcla a `main` solo con las pruebas en verde. **`main` siempre funciona.**
+- **Tomar una historia** = `git switch main && git pull` → crear la rama de la historia desde `main` → ponerla en `en-curso` con tu nombre en el primer commit → push y PR en borrador **antes** de empezar. Solo se toman historias cuyas dependencias ya estén en `hecha`. Si los dos trabajan el mismo día, cada uno toma una historia distinta que no dependa de la otra (el grafo muestra cuáles van en paralelo).
+- **Una rama por historia** (`h1-2-serializacion-canonica`). Se mezcla a `main` **por Pull Request** y solo con las pruebas en verde; nunca se hace push directo a `main`. **`main` siempre funciona.**
 - **Si no terminas:** dejas una sección "Notas de traspaso" en el archivo de la historia (qué quedó hecho, qué falta, qué se rompió), haces push de la rama y la historia queda `en-curso` sin dueño. El otro la retoma desde ahí.
 - **Tamaño:** cada historia debe caber en una sesión de trabajo de 2 a 4 horas con un agente.
 - **Contexto para los agentes:** `AGENTS.md` (y `CLAUDE.md` que lo importa) en la raíz, con el stack, los comandos, las convenciones, la regla de "lee el diseño y tu historia antes de codificar" y el flujo de arriba. Este documento de diseño queda en `docs/superpowers/specs/2026-11-09-blockchain-integridad-design.md`.
