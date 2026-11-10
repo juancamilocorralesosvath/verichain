@@ -8,7 +8,8 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 
-- **H2.2** Génesis, crear persona y consultar la cadena (ya con H2.1 y H1.3 hechas).
+- **H2.3** Endpoint de verificación (ya con H2.2 y H1.4 hechas).
+- **H4.1** Cifrado AES-256-GCM de dirección y teléfono.
 - **H3.1** Usuarios, contraseñas y login.
 - **H9.1** Web base.
 - **H11.1** CA propia y HTTPS.
@@ -26,7 +27,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H1.3](H1.3-prueba-de-trabajo.md)               | Prueba de trabajo (minado)                                          | H1.2                                     | hecha     | Juan Camilo |
 | [H1.4](H1.4-verificacion-de-cadena.md)          | Verificación completa de la cadena                                  | H1.3                                     | hecha     | Juan Camilo |
 | [H2.1](H2.1-api-base.md)                        | API NestJS base con seguridad por defecto                           | H0.1                                     | hecha     | Juan Camilo |
-| [H2.2](H2.2-crear-persona-y-cadena.md)          | Génesis, crear persona y consultar la cadena                        | H2.1, H1.3                               | en-curso  | Juan Camilo |
+| [H2.2](H2.2-crear-persona-y-cadena.md)          | Génesis, crear persona y consultar la cadena                        | H2.1, H1.3                               | hecha     | Juan Camilo |
 | [H2.3](H2.3-verificar-cadena-api.md)            | Endpoint de verificación                                            | H2.2, H1.4                               | pendiente |             |
 | [H3.1](H3.1-usuarios-y-login.md)                | Usuarios, contraseñas y login                                       | H2.1                                     | pendiente |             |
 | [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | pendiente |             |
