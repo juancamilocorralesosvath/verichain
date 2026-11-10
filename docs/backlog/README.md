@@ -8,7 +8,8 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 
-- **H2.1** API NestJS base.
+- **H2.2** Génesis, crear persona y consultar la cadena (ya con H2.1 y H1.3 hechas).
+- **H3.1** Usuarios, contraseñas y login.
 - **H9.1** Web base.
 - **H11.1** CA propia y HTTPS.
 - H12.2 (el informe) no tiene dependencias técnicas, pero conviene dejarlo para después del congelamiento del 20 de noviembre.
@@ -24,7 +25,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H1.2](H1.2-hashes-y-genesis.md)                | Hashes SHA-256 y bloque génesis                                     | H1.1                                     | hecha     | Juan Camilo |
 | [H1.3](H1.3-prueba-de-trabajo.md)               | Prueba de trabajo (minado)                                          | H1.2                                     | hecha     | Juan Camilo |
 | [H1.4](H1.4-verificacion-de-cadena.md)          | Verificación completa de la cadena                                  | H1.3                                     | hecha     | Juan Camilo |
-| [H2.1](H2.1-api-base.md)                        | API NestJS base con seguridad por defecto                           | H0.1                                     | en-curso  | Juan Camilo |
+| [H2.1](H2.1-api-base.md)                        | API NestJS base con seguridad por defecto                           | H0.1                                     | hecha     | Juan Camilo |
 | [H2.2](H2.2-crear-persona-y-cadena.md)          | Génesis, crear persona y consultar la cadena                        | H2.1, H1.3                               | pendiente |             |
 | [H2.3](H2.3-verificar-cadena-api.md)            | Endpoint de verificación                                            | H2.2, H1.4                               | pendiente |             |
 | [H3.1](H3.1-usuarios-y-login.md)                | Usuarios, contraseñas y login                                       | H2.1                                     | pendiente |             |

@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Persona {
+  id                Int     @id @default(autoincrement())
+  cedula            String  @unique
+  nombre            String
+  direccion_cifrada String
+  telefono_cifrado  String
+  creado_en         String // ISO UTC con ms, exactamente el que se hasheó
+  creado_por        String
+  bloque            Bloque?
+}
+
+model Bloque {
+  indice        Int      @id // 0 = génesis
+  persona_id    Int?     @unique
+  persona       Persona? @relation(fields: [persona_id], references: [id])
+  hash_datos    String
+  nonce         Int
+  hash_anterior String
+  hash_cadena   String
+  firma_usuario String?
+  llave_id      Int?
+  creado_en     String
+}
