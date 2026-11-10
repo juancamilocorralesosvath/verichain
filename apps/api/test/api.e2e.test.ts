@@ -9,6 +9,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
+import { crearBdTemporal } from './ayudantes-bd.js';
 
 const WEB_ORIGIN = 'http://localhost:5173';
 
@@ -61,6 +62,7 @@ async function crearApp(modulo: new () => object): Promise<INestApplication> {
 describe('API base', () => {
   let app: INestApplication;
   beforeAll(async () => {
+    crearBdTemporal();
     app = await crearApp(ModuloPrueba);
   });
   afterAll(async () => {

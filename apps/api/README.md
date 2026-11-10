@@ -9,9 +9,12 @@ npm run dev -w @bc/api            # compila @bc/core, genera Prisma y levanta co
 npm run build -w @bc/api
 npm run test -w @bc/api
 npm run prisma:migrate -w @bc/api # crea/aplica migraciones (BD en apps/api/data/, ignorada por git)
+npm run seed -w @bc/api           # crea el admin inicial si aún no existe
 ```
 
-Copia `.env.example` a `.env` en la raíz. Variables usadas hoy: `PORT`, `WEB_ORIGIN`, `DATABASE_URL`.
+Copia `.env.example` a `.env` en la raíz. Configura `JWT_SECRET`, `JWT_EXPIRES_IN`,
+`ADMIN_USERNAME` y `ADMIN_PASSWORD` (mínimo 12 caracteres) antes de iniciar la API y ejecutar el seed.
+El seed es idempotente y no cambia la contraseña de un usuario ya existente.
 
 ## Seguridad por defecto
 

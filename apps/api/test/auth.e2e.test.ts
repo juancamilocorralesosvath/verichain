@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { JwtService } from '@nestjs/jwt';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -6,6 +7,7 @@ import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { seedAdmin } from '../src/auth/seed.js';
+import { AuthService } from '../src/auth/auth.service.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
 
 describe('Autenticación', () => {
@@ -43,14 +45,35 @@ describe('Autenticación', () => {
       .send({ username: 'admin', password })
       .expect(201);
     expect(login.body).toEqual({ username: 'admin', rol: 'admin' });
-    const cookie = login.headers['set-cookie'][0] as string;
+    const cookie = (login.headers['set-cookie'] as unknown as string[])[0] ?? '';
     expect(cookie).toMatch(/HttpOnly/);
     expect(cookie).toMatch(/SameSite=Strict/);
     await request(app.getHttpServer())
       .get('/api/auth/yo')
       .set('Cookie', cookie)
       .expect(200, { username: 'admin', rol: 'admin' });
-    await request(app.getHttpServer()).post('/api/auth/logout').expect(201);
+    await request(app.getHttpServer())
+      .get('/api/auth/yo')
+      .set('Authorization', `Bearer ${cookie.split(';')[0]?.slice(7)}`)
+      .expect(401);
+    const salida = await request(app.getHttpServer()).post('/api/auth/logout').expect(201);
+    expect(salida.headers['set-cookie']?.[0]).toMatch(/sesion=;.*Path=\/api/);
+  });
+
+  it('rechaza contraseñas de seed cortas incluso si el admin existe', async () => {
+    process.env['ADMIN_PASSWORD'] = 'corta';
+    await expect(seedAdmin(prisma)).rejects.toThrow('al menos 12');
+    process.env['ADMIN_PASSWORD'] = password;
+  });
+
+  it('no permite iniciar sin JWT_SECRET', () => {
+    const anterior = process.env['JWT_SECRET'];
+    process.env['JWT_SECRET'] = '';
+    try {
+      expect(() => new AuthService(prisma, new JwtService())).toThrow('JWT_SECRET');
+    } finally {
+      process.env['JWT_SECRET'] = anterior;
+    }
   });
 
   it('no distingue contraseña incorrecta de usuario inexistente', async () => {

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AuthModule } from './auth/auth.module.js';
 import { CadenaModule } from './cadena/cadena.module.js';
 import { PersonasModule } from './personas/personas.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -11,6 +12,7 @@ import { SaludController } from './salud/salud.controller.js';
     // 100 solicitudes por minuto por IP
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
+    AuthModule,
     CadenaModule,
     PersonasModule,
   ],
