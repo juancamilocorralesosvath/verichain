@@ -9,4 +9,10 @@ export class CadenaController {
   listar() {
     return this.cadena.listarCadena();
   }
+
+  // Público por ahora: H3.2 le pone guards por rol.
+  @Get('verificar')
+  verificar() {
+    return this.cadena.verificar();
+  }
 }

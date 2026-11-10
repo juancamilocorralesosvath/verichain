@@ -4,7 +4,10 @@ import {
   HASH_DATOS_GENESIS,
   calcularHashDatos,
   minar,
+  verificarCadena,
+  type BloqueCadena,
   type FilaPersona,
+  type ReporteCadena,
 } from '@bc/core';
 import { Cola } from '../comun/cola.js';
 import { dificultadPow } from '../comun/config.js';
@@ -86,6 +89,39 @@ export class CadenaService implements OnModuleInit {
         }
         throw error;
       }
+    });
+  }
+
+  /**
+   * Recalcula todos los hashes en vivo a partir de la fila ACTUAL de cada persona.
+   * Va por la misma cola que los anexos para no leer una cadena a medio anexar.
+   * Aún sin firmas ni sello (H5.x): esos chequeos quedan en 'no-aplica'.
+   */
+  verificar(): Promise<ReporteCadena> {
+    return this.cola.ejecutar(async () => {
+      const filas = await this.prisma.bloque.findMany({
+        orderBy: { indice: 'asc' },
+        include: { persona: true },
+      });
+      // Mapeo explícito: no se cuela ningún campo interno de Prisma (id, persona_id...).
+      const bloques: BloqueCadena[] = filas.map((b) => ({
+        indice: b.indice,
+        hash_datos: b.hash_datos,
+        nonce: b.nonce,
+        hash_anterior: b.hash_anterior,
+        hash_cadena: b.hash_cadena,
+        firma_usuario: b.firma_usuario,
+        llave_id: b.llave_id,
+        persona: b.persona && {
+          cedula: b.persona.cedula,
+          nombre: b.persona.nombre,
+          direccion_cifrada: b.persona.direccion_cifrada,
+          telefono_cifrado: b.persona.telefono_cifrado,
+          creado_en: b.persona.creado_en,
+          creado_por: b.persona.creado_por,
+        },
+      }));
+      return verificarCadena(bloques, { dificultad: dificultadPow(), llavesUsuarios: {} });
     });
   }
 
