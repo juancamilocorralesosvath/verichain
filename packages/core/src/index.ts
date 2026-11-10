@@ -5,7 +5,18 @@
  */
 export const CORE_VERSION = '0.1.0';
 
-export { CAMPOS_PERSONA, type FilaPersona } from './tipos.js';
+export { CAMPOS_PERSONA } from './tipos.js';
+export type {
+  BloqueCadena,
+  EstadoChequeo,
+  FilaPersona,
+  OpcionesVerificacion,
+  ReporteBloque,
+  ReporteCadena,
+  Sello,
+  VerificadorFirma,
+} from './tipos.js';
+export { verificarCadena } from './verificar.js';
 export { serializarPersona } from './canonico.js';
 export { sha256Hex, calcularHashDatos, calcularHashCadena } from './hash.js';
 export { cumpleDificultad, minar, type ResultadoMinado } from './pow.js';
