@@ -26,7 +26,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H1.3](H1.3-prueba-de-trabajo.md)               | Prueba de trabajo (minado)                                          | H1.2                                     | hecha     | Juan Camilo |
 | [H1.4](H1.4-verificacion-de-cadena.md)          | Verificación completa de la cadena                                  | H1.3                                     | hecha     | Juan Camilo |
 | [H2.1](H2.1-api-base.md)                        | API NestJS base con seguridad por defecto                           | H0.1                                     | hecha     | Juan Camilo |
-| [H2.2](H2.2-crear-persona-y-cadena.md)          | Génesis, crear persona y consultar la cadena                        | H2.1, H1.3                               | pendiente |             |
+| [H2.2](H2.2-crear-persona-y-cadena.md)          | Génesis, crear persona y consultar la cadena                        | H2.1, H1.3                               | en-curso  | Juan Camilo |
 | [H2.3](H2.3-verificar-cadena-api.md)            | Endpoint de verificación                                            | H2.2, H1.4                               | pendiente |             |
 | [H3.1](H3.1-usuarios-y-login.md)                | Usuarios, contraseñas y login                                       | H2.1                                     | pendiente |             |
 | [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | pendiente |             |
