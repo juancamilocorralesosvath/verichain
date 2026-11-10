@@ -1,0 +1,44 @@
+{
+  "name": "@bc/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Servicio NestJS (integridad, auth, cifrado, firmas).",
+  "scripts": {
+    "prebuild": "npm run build -w @bc/core && prisma generate",
+    "build": "tsc -p tsconfig.build.json",
+    "predev": "npm run build -w @bc/core && prisma generate",
+    "dev": "tsc -p tsconfig.build.json && (tsc -p tsconfig.build.json --watch --preserveWatchOutput & node --watch --env-file-if-exists=../../.env dist/main.js)",
+    "start": "node --env-file-if-exists=../../.env dist/main.js",
+    "pretypecheck": "npm run build -w @bc/core && prisma generate",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "npm run build -w @bc/core && prisma generate",
+    "test": "vitest run",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^12.4.2",
+    "@swc/core": "^1.16.22",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "@types/supertest": "^7.2.1",
+    "prisma": "^7.10.1",
+    "supertest": "^7.3.2",
+    "unplugin-swc": "^2.0.0",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@bc/core": "*",
+    "@nestjs/common": "^12.4.2",
+    "@nestjs/core": "^12.4.2",
+    "@nestjs/platform-express": "^12.4.2",
+    "@nestjs/throttler": "^6.7.1",
+    "@prisma/adapter-better-sqlite3": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "helmet": "^8.3.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  }
+}

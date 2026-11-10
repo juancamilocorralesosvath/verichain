@@ -29,3 +29,6 @@ data/
 
 # Material del curso (no es parte del código)
 Ciberseguridad 251.pdf
+
+# Cliente Prisma generado (se regenera con `prisma generate`)
+apps/api/src/generated/
