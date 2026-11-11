@@ -15,13 +15,15 @@ afterEach(() => {
 describe('menú y rutas', () => {
   for (const [rol, enlaces] of Object.entries(menus)) {
     it(`muestra el menú de ${rol}`, async () => {
+      // las páginas de datos (H9.2) también piden listas: solo /auth/yo devuelve el usuario
       vi.stubGlobal(
         'fetch',
-        vi.fn().mockResolvedValue({
+        vi.fn(async (url: string) => ({
           ok: true,
           status: 200,
-          text: async () => JSON.stringify({ username: 'ana', rol }),
-        }),
+          text: async () =>
+            JSON.stringify(url.endsWith('/auth/yo') ? { username: 'ana', rol } : []),
+        })),
       );
       render(
         <MemoryRouter initialEntries={['/cadena']}>
