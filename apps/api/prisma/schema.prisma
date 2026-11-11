@@ -43,6 +43,16 @@ model Borrador {
   expira_en  DateTime
 }
 
+/// Sello del servidor: firma ECDSA sobre `${indice}:${hash_cadena}` del último bloque (§5.4).
+/// Histórico: el vigente es el de mayor id.
+model Sello {
+  id          Int      @id @default(autoincrement())
+  indice      Int
+  hash_cadena String
+  firma       String
+  creado_en   DateTime @default(now())
+}
+
 model Persona {
   id                Int     @id @default(autoincrement())
   cedula            String  @unique

@@ -15,6 +15,7 @@
     "pretest": "npm run build -w @bc/core && prisma generate",
     "test": "vitest run",
     "prisma:migrate": "prisma migrate dev",
+    "llaves:servidor": "node --env-file-if-exists=../../.env scripts/llaves-servidor.mjs",
     "seed": "npm run build && node --env-file-if-exists=../../.env dist/auth/ejecutar-seed.js"
   },
   "devDependencies": {

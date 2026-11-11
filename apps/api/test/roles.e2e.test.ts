@@ -133,6 +133,7 @@ describe('Matriz de permisos', () => {
       }
     }
     expect(rutas.filter((ruta) => ruta.endsWith(' público')).sort()).toEqual([
+      'GET /api/cadena/llave-servidor público',
       'GET /api/salud público',
       'POST /api/auth/login público',
     ]);

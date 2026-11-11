@@ -14,6 +14,7 @@ import { dificultadPow } from '../comun/config.js';
 import { LlavesService } from '../llaves/llaves.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CifradoService } from '../cripto/cifrado.service.js';
+import { FirmaServidorService } from '../cripto/firma-servidor.service.js';
 import { verificarFirmaNode } from '../cripto/verificador-firma.node.js';
 import type { Prisma } from '../generated/prisma/client.js';
 
@@ -33,6 +34,7 @@ export class CadenaService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly cifrado: CifradoService,
     private readonly llaves: LlavesService,
+    private readonly firmaServidor: FirmaServidorService,
   ) {}
 
   /** Génesis automático: solo si la cadena está vacía. */
@@ -40,15 +42,25 @@ export class CadenaService implements OnModuleInit {
     await this.cola.ejecutar(async () => {
       if ((await this.prisma.bloque.count()) > 0) return;
       const minado = minar(HASH_CERO, HASH_DATOS_GENESIS, dificultadPow());
-      await this.prisma.bloque.create({
-        data: {
-          indice: 0,
-          hash_datos: HASH_DATOS_GENESIS,
-          nonce: minado.nonce,
-          hash_anterior: HASH_CERO,
-          hash_cadena: minado.hashCadena,
-          creado_en: new Date().toISOString(),
-        },
+      // el génesis y su sello se crean juntos
+      await this.prisma.$transaction(async (tx) => {
+        await tx.bloque.create({
+          data: {
+            indice: 0,
+            hash_datos: HASH_DATOS_GENESIS,
+            nonce: minado.nonce,
+            hash_anterior: HASH_CERO,
+            hash_cadena: minado.hashCadena,
+            creado_en: new Date().toISOString(),
+          },
+        });
+        await tx.sello.create({
+          data: {
+            indice: 0,
+            hash_cadena: minado.hashCadena,
+            firma: this.firmaServidor.firmarSello(0, minado.hashCadena),
+          },
+        });
       });
     });
   }
@@ -109,6 +121,14 @@ export class CadenaService implements OnModuleInit {
         creado_en: fila.creado_en,
       },
     });
+    // el sello del nuevo último bloque va en la misma transacción que el anexo
+    await tx.sello.create({
+      data: {
+        indice: bloque.indice,
+        hash_cadena: bloque.hash_cadena,
+        firma: this.firmaServidor.firmarSello(bloque.indice, bloque.hash_cadena),
+      },
+    });
     return {
       indice: bloque.indice,
       persona_id: persona.id,
@@ -118,42 +138,80 @@ export class CadenaService implements OnModuleInit {
   }
 
   /**
-   * Recalcula todos los hashes en vivo a partir de la fila ACTUAL de cada persona.
-   * Va por la misma cola que los anexos para no leer una cadena a medio anexar.
-   * Verifica también las firmas de los usuarios; el sello del servidor llega con H5.4.
+   * Recalcula todos los hashes en vivo a partir de la fila ACTUAL de cada persona y verifica las
+   * firmas de los usuarios y el sello del servidor. Va por la misma cola que los anexos para no
+   * leer una cadena a medio anexar.
    */
   verificar(): Promise<ReporteCadena> {
-    return this.cola.ejecutar(async () => {
-      const filas = await this.prisma.bloque.findMany({
-        orderBy: { indice: 'asc' },
-        include: { persona: true },
-      });
-      // Mapeo explícito: no se cuela ningún campo interno de Prisma (id, persona_id...).
-      const bloques: BloqueCadena[] = filas.map((b) => ({
-        indice: b.indice,
-        hash_datos: b.hash_datos,
-        nonce: b.nonce,
-        hash_anterior: b.hash_anterior,
-        hash_cadena: b.hash_cadena,
-        firma_usuario: b.firma_usuario,
-        llave_id: b.llave_id,
-        persona: b.persona && {
-          cedula: b.persona.cedula,
-          nombre: b.persona.nombre,
-          direccion_cifrada: b.persona.direccion_cifrada,
-          telefono_cifrado: b.persona.telefono_cifrado,
-          creado_en: b.persona.creado_en,
-          creado_por: b.persona.creado_por,
-        },
-      }));
-      // llavesUsuarios incluye las llaves aprobadas y las reemplazadas (los bloques viejos siguen verificando)
-      const llavesUsuarios = await this.llaves.llavesParaVerificacion();
-      return verificarCadena(bloques, {
-        dificultad: dificultadPow(),
-        llavesUsuarios,
-        verificarFirma: verificarFirmaNode,
-      });
+    return this.cola.ejecutar(() => this.verificarSinCola());
+  }
+
+  /** Verificación completa sin pasar por la cola: solo para quien ya está dentro de ella. */
+  async verificarSinCola(): Promise<ReporteCadena> {
+    const filas = await this.prisma.bloque.findMany({
+      orderBy: { indice: 'asc' },
+      include: { persona: true },
     });
+    // Mapeo explícito: no se cuela ningún campo interno de Prisma (id, persona_id...).
+    const bloques: BloqueCadena[] = filas.map((b) => ({
+      indice: b.indice,
+      hash_datos: b.hash_datos,
+      nonce: b.nonce,
+      hash_anterior: b.hash_anterior,
+      hash_cadena: b.hash_cadena,
+      firma_usuario: b.firma_usuario,
+      llave_id: b.llave_id,
+      persona: b.persona && {
+        cedula: b.persona.cedula,
+        nombre: b.persona.nombre,
+        direccion_cifrada: b.persona.direccion_cifrada,
+        telefono_cifrado: b.persona.telefono_cifrado,
+        creado_en: b.persona.creado_en,
+        creado_por: b.persona.creado_por,
+      },
+    }));
+    // llavesUsuarios incluye las llaves aprobadas y las reemplazadas (los bloques viejos siguen verificando)
+    const llavesUsuarios = await this.llaves.llavesParaVerificacion();
+    const vigente = await this.prisma.sello.findFirst({ orderBy: { id: 'desc' } });
+    const reporte = await verificarCadena(bloques, {
+      dificultad: dificultadPow(),
+      llavesUsuarios,
+      verificarFirma: verificarFirmaNode,
+      sello: vigente && {
+        indice: vigente.indice,
+        hash_cadena: vigente.hash_cadena,
+        firma: vigente.firma,
+      },
+      llavePublicaServidor: this.firmaServidor.llavePublicaSpkiB64(),
+    });
+    // Sin ningún sello el core responde "no aplica"; aquí falta por completo, y eso no se puede
+    // aceptar (si no, borrar la tabla de sellos silenciaría la detección).
+    if (!vigente) {
+      return {
+        ...reporte,
+        valida: false,
+        sello: {
+          estado: 'falla',
+          motivos: ['No existe ningún sello del servidor: la cadena no se puede dar por íntegra'],
+        },
+      };
+    }
+    return reporte;
+  }
+
+  /** Antes de anexar: si la cadena no verifica por completo, no se escribe nada (409). */
+  async exigirCadenaIntegra(): Promise<void> {
+    if (!(await this.verificarSinCola()).valida) {
+      throw new ConflictException('Cadena comprometida: restaure antes de continuar');
+    }
+  }
+
+  /** Clave pública del servidor para quien quiera verificar el sello por su cuenta. */
+  llaveServidor(): { pem: string; huella_sha256: string } {
+    return {
+      pem: this.firmaServidor.llavePublicaPem(),
+      huella_sha256: this.firmaServidor.huellaSha256Hex(),
+    };
   }
 
   listarCadena() {

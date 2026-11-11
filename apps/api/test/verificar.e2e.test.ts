@@ -46,13 +46,13 @@ describe('GET /api/cadena/verificar', () => {
     expect(r.totalBloques).toBe(1);
   });
 
-  it('cadena recién creada con 3 personas firmadas: válida; el sello aún no aplica', async () => {
+  it('cadena recién creada con 3 personas firmadas: válida y con el sello del servidor ok', async () => {
     for (let i = 0; i < 3; i++) expect((await crearPersonaFirmada(app, firmante)).status).toBe(201);
     const r = await verificar();
     expect(r.valida).toBe(true);
     expect(r.primerBloqueRoto).toBeNull();
     expect(r.totalBloques).toBe(4);
-    expect(r.sello.estado).toBe('no-aplica');
+    expect(r.sello.estado).toBe('ok');
     for (const b of r.bloques) {
       expect(b.chequeos.hashDatos).toBe('ok');
       expect(b.chequeos.enlace).toBe('ok');
