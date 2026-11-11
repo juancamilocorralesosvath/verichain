@@ -1,10 +1,15 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { Cadena } from './paginas/Cadena';
+import { MiLlave } from './paginas/MiLlave';
 import { Personas } from './paginas/Personas';
 import { SesionProvider, useSesion, type Rol } from './sesion';
 
-const paginas: Record<string, ReactNode> = { '/personas': <Personas />, '/cadena': <Cadena /> };
+const paginas: Record<string, ReactNode> = {
+  '/personas': <Personas />,
+  '/cadena': <Cadena />,
+  '/mi-llave': <MiLlave />,
+};
 
 const enlaces: { titulo: string; ruta: string; roles: Rol[] }[] = [
   { titulo: 'Personas', ruta: '/personas', roles: ['registrador', 'auditor'] },

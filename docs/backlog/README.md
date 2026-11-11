@@ -11,7 +11,8 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 - **H3.3** y **H7.2** (disponibles al mezclar H3.2).
 - **H4.2** Lo que ve cada rol (disponible al mezclar H4.1).
 
-- **H5.1**, **H9.3** y **H10.1** (disponibles al mezclar H9.1 y H9.2).
+- **H5.3** Flujo preparar → firmar → confirmar (todas sus dependencias están hechas).
+- **H9.3** y **H10.1** (disponibles al mezclar H9.1 y H9.2).
 - **H11.2** Docker Compose con nginx TLS (disponible al mezclar H11.1).
 - H12.2 (el informe) no tiene dependencias técnicas, pero conviene dejarlo para después del congelamiento del 20 de noviembre.
 
@@ -34,7 +35,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H3.3](H3.3-gestion-de-usuarios.md)             | Gestión de usuarios (admin)                                         | H3.2                                     | pendiente |             |
 | [H4.1](H4.1-cifrado-aes.md)                     | Cifrado AES-256-GCM de dirección y teléfono                         | H2.2                                     | hecha     | Codex       |
 | [H4.2](H4.2-respuestas-por-rol.md)              | Lo que ve cada rol                                                  | H4.1, H3.2                               | pendiente |             |
-| [H5.1](H5.1-llaves-en-navegador.md)             | Llaves del usuario en el navegador                                  | H9.1                                     | pendiente |             |
+| [H5.1](H5.1-llaves-en-navegador.md)             | Llaves del usuario en el navegador                                  | H9.1                                     | hecha     | Juan Camilo |
 | [H5.2](H5.2-registro-de-llaves.md)              | Registro, aprobación y rotación de llaves                           | H3.2                                     | hecha     | Juan Camilo |
 | [H5.3](H5.3-flujo-preparar-firmar-confirmar.md) | Bloques firmados: preparar → firmar → confirmar                     | H5.1, H5.2, H4.1, H9.2                   | pendiente |             |
 | [H5.4](H5.4-sello-del-servidor.md)              | Sello del servidor y cadena comprometida                            | H5.3                                     | pendiente |             |
