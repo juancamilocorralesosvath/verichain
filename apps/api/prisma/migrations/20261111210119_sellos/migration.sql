@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "Sello" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "indice" INTEGER NOT NULL,
+    "hash_cadena" TEXT NOT NULL,
+    "firma" TEXT NOT NULL,
+    "creado_en" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

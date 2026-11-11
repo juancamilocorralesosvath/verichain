@@ -64,6 +64,8 @@ export class BloquesService {
       if (!(await verificarFirmaNode(llave.spki_b64, borrador.hash_datos, dto.firma_b64))) {
         throw new BadRequestException('Firma inválida');
       }
+      // un anexo nuevo no puede "lavar" una cadena alterada: se verifica todo antes de escribir
+      await this.cadena.exigirCadenaIntegra();
       const fila = JSON.parse(borrador.fila_json) as FilaPersona;
       try {
         return await this.prisma.$transaction(async (tx) => {
