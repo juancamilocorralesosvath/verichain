@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
+import { hash } from 'argon2';
 
 let seq = 0;
 const persona = (): Record<string, string> => ({
@@ -19,7 +20,12 @@ const persona = (): Record<string, string> => ({
 describe('GET /api/cadena/verificar', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  const http = (): ReturnType<typeof request> => request(app.getHttpServer());
+  let registrador = '';
+  let auditor = '';
+  const http = () => ({
+    get: (ruta: string) => request(app.getHttpServer()).get(ruta).set('Cookie', auditor),
+    post: (ruta: string) => request(app.getHttpServer()).post(ruta).set('Cookie', registrador),
+  });
   const verificar = async (): Promise<ReporteCadena> =>
     (await http().get('/api/cadena/verificar').expect(200)).body as ReporteCadena;
 
@@ -30,6 +36,17 @@ describe('GET /api/cadena/verificar', () => {
     configurarApp(app, 'http://localhost:5173');
     await app.init();
     prisma = app.get(PrismaService);
+    const password_hash = await hash('clave-de-prueba-123');
+    for (const rol of ['registrador', 'auditor']) {
+      await prisma.usuario.create({ data: { username: rol, rol, password_hash } });
+      const login = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ username: rol, password: 'clave-de-prueba-123' })
+        .expect(201);
+      const cookie = (login.headers['set-cookie'] as unknown as string[])[0] ?? '';
+      if (rol === 'registrador') registrador = cookie;
+      else auditor = cookie;
+    }
   });
   afterAll(async () => {
     await app.close();

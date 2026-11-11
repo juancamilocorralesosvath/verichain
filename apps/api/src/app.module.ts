@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module.js';
+import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
+import { RolesGuard } from './auth/roles.guard.js';
 import { CadenaModule } from './cadena/cadena.module.js';
 import { PersonasModule } from './personas/personas.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -17,6 +19,10 @@ import { SaludController } from './salud/salud.controller.js';
     PersonasModule,
   ],
   controllers: [SaludController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}

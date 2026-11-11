@@ -46,7 +46,7 @@ export class CadenaService implements OnModuleInit {
   }
 
   /** Crea la persona y su bloque en una sola transacción, serializada con los demás anexos. */
-  agregarPersona(datos: DatosPersona) {
+  agregarPersona(datos: DatosPersona, creado_por: string) {
     return this.cola.ejecutar(async () => {
       try {
         return await this.prisma.$transaction(async (tx) => {
@@ -64,7 +64,7 @@ export class CadenaService implements OnModuleInit {
             direccion_cifrada: datos.direccion,
             telefono_cifrado: datos.telefono,
             creado_en,
-            creado_por: 'anonimo', // TODO(H3.x): el usuario autenticado
+            creado_por,
           };
           const hash_datos = calcularHashDatos(fila);
           const minado = minar(ultimo.hash_cadena, hash_datos, dificultadPow());
