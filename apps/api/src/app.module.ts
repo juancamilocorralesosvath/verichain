@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
 import { RolesGuard } from './auth/roles.guard.js';
 import { CadenaModule } from './cadena/cadena.module.js';
+import { LlavesModule } from './llaves/llaves.module.js';
 import { PersonasModule } from './personas/personas.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { SaludController } from './salud/salud.controller.js';
@@ -16,6 +17,7 @@ import { SaludController } from './salud/salud.controller.js';
     PrismaModule,
     AuthModule,
     CadenaModule,
+    LlavesModule,
     PersonasModule,
   ],
   controllers: [SaludController],

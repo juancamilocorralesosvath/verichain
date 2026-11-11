@@ -11,6 +11,7 @@ import {
 } from '@bc/core';
 import { Cola } from '../comun/cola.js';
 import { dificultadPow } from '../comun/config.js';
+import { LlavesService } from '../llaves/llaves.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CifradoService } from '../cripto/cifrado.service.js';
 
@@ -29,6 +30,7 @@ export class CadenaService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cifrado: CifradoService,
+    private readonly llaves: LlavesService,
   ) {}
 
   /** Génesis automático: solo si la cadena está vacía. */
@@ -124,7 +126,9 @@ export class CadenaService implements OnModuleInit {
           creado_por: b.persona.creado_por,
         },
       }));
-      return verificarCadena(bloques, { dificultad: dificultadPow(), llavesUsuarios: {} });
+      // llavesUsuarios ya incluye aprobadas y reemplazadas; sin `verificarFirma` (H5.3/H5.4) no se usan aún.
+      const llavesUsuarios = await this.llaves.llavesParaVerificacion();
+      return verificarCadena(bloques, { dificultad: dificultadPow(), llavesUsuarios });
     });
   }
 
