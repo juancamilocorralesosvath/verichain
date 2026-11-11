@@ -1,5 +1,4 @@
 import { solicitar } from './cliente';
-import type { ValoresPersona } from '../validacion';
 
 /**
  * Contrato de H4.2 (registrador: datos reales; auditor: '***'). Los campos son opcionales para
@@ -21,7 +20,3 @@ export async function listarPersonas(): Promise<PersonaApi[]> {
   if (!Array.isArray(lista)) throw new Error('Respuesta inesperada del servidor');
   return lista as PersonaApi[];
 }
-
-// Antes de H5.3 se crea directo; H5.3 lo cambia al flujo preparar → firmar → confirmar.
-export const crearPersona = (valores: ValoresPersona): Promise<unknown> =>
-  solicitar('/personas', { method: 'POST', body: JSON.stringify(valores) });

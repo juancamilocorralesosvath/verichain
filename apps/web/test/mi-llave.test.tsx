@@ -3,8 +3,8 @@ import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { webcrypto } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { borrarPar } from '../src/cripto/almacen';
-import { crearRespaldo, generarPar } from '../src/cripto/llaves';
+import { borrarPar, guardarPar } from '../src/cripto/almacen';
+import { crearRespaldo, exportarPublicaSpkiB64, generarPar } from '../src/cripto/llaves';
 import { renderizar, sesion, simularApi } from './ayudantes';
 
 const PASSWORD = 'una-contraseña-larga-123';
@@ -12,7 +12,7 @@ const SPKI = /^MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/;
 
 beforeEach(async () => {
   vi.stubGlobal('crypto', webcrypto);
-  simularApi({ ...sesion('registrador') });
+  simularApi({ ...sesion('registrador'), 'GET /api/llaves/mias': { cuerpo: [] } });
   await borrarPar('registrador1');
 });
 afterEach(() => {
@@ -135,4 +135,60 @@ describe('Mi llave', () => {
     await waitFor(() => expect(globalThis.confirm).toHaveBeenCalled());
     expect(screen.getByText(SPKI).textContent).toBe(original);
   }, 30_000);
+
+  describe('estado en el servidor', () => {
+    const generarEnPagina = async () => {
+      renderizar('/mi-llave');
+      const usuario = userEvent.setup();
+      await usuario.click(await screen.findByRole('button', { name: 'Generar llave' }));
+      const spki = (await screen.findByText(SPKI)).textContent as string;
+      return { usuario, spki };
+    };
+
+    it('registrar en el servidor envía la pública y pasa a pendiente', async () => {
+      const mock = simularApi({
+        ...sesion('registrador'),
+        'GET /api/llaves/mias': { cuerpo: [] },
+        'POST /api/llaves': { status: 201, cuerpo: { id: 3, version: 1, estado: 'pendiente' } },
+      });
+      const { usuario, spki } = await generarEnPagina();
+      expect(await screen.findByText(/no está registrada en el servidor/i)).toBeTruthy();
+      await usuario.click(screen.getByRole('button', { name: 'Registrar en el servidor' }));
+      expect(await screen.findByText(/pendiente de aprobación/i)).toBeTruthy();
+      const [, opciones] = mock.mock.calls.find(
+        ([url, o]) => url === '/api/llaves' && (o as RequestInit | undefined)?.method === 'POST',
+      ) as [string, RequestInit];
+      expect(JSON.parse(opciones.body as string)).toEqual({ spki_b64: spki });
+      expect(screen.queryByRole('button', { name: 'Registrar en el servidor' })).toBeNull();
+    });
+
+    it('una llave ya aprobada se muestra como aprobada, sin botón de registro', async () => {
+      const par = await generarPar();
+      const spki = await exportarPublicaSpkiB64(par.publica);
+      await guardarPar('registrador1', par);
+      simularApi({
+        ...sesion('registrador'),
+        'GET /api/llaves/mias': {
+          cuerpo: [{ id: 9, version: 2, estado: 'aprobada', spki_b64: spki }],
+        },
+      });
+      renderizar('/mi-llave');
+      expect(await screen.findByText(/aprobada/i)).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Registrar en el servidor' })).toBeNull();
+    });
+
+    it('si el servidor rechaza el registro muestra su mensaje', async () => {
+      simularApi({
+        ...sesion('registrador'),
+        'GET /api/llaves/mias': { cuerpo: [] },
+        'POST /api/llaves': {
+          status: 409,
+          cuerpo: { statusCode: 409, mensaje: 'Registro duplicado' },
+        },
+      });
+      const { usuario } = await generarEnPagina();
+      await usuario.click(await screen.findByRole('button', { name: 'Registrar en el servidor' }));
+      expect((await screen.findByRole('alert')).textContent).toMatch(/registro duplicado/i);
+    });
+  });
 });

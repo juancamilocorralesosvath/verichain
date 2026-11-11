@@ -14,6 +14,8 @@ import { dificultadPow } from '../comun/config.js';
 import { LlavesService } from '../llaves/llaves.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CifradoService } from '../cripto/cifrado.service.js';
+import { verificarFirmaNode } from '../cripto/verificador-firma.node.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
 export interface DatosPersona {
   cedula: string;
@@ -51,56 +53,74 @@ export class CadenaService implements OnModuleInit {
     });
   }
 
-  /** Crea la persona y su bloque en una sola transacción, serializada con los demás anexos. */
-  agregarPersona(datos: DatosPersona, creado_por: string) {
-    return this.cola.ejecutar(async () => {
-      try {
-        return await this.prisma.$transaction(async (tx) => {
-          if (await tx.persona.findUnique({ where: { cedula: datos.cedula } })) {
-            throw new ConflictException('Registro duplicado');
-          }
-          const ultimo = await tx.bloque.findFirst({ orderBy: { indice: 'desc' } });
-          if (!ultimo) throw new Error('La cadena no tiene génesis');
+  /** Ejecuta una tarea en la cola de anexos: una a la vez, en el orden en que llegan. */
+  serializar<T>(tarea: () => Promise<T>): Promise<T> {
+    return this.cola.ejecutar(tarea);
+  }
 
-          const creado_en = new Date().toISOString();
-          const fila: FilaPersona = {
-            cedula: datos.cedula,
-            nombre: datos.nombre,
-            direccion_cifrada: this.cifrado.cifrar(datos.direccion),
-            telefono_cifrado: this.cifrado.cifrar(datos.telefono),
-            creado_en,
-            creado_por,
-          };
-          const hash_datos = calcularHashDatos(fila);
-          const minado = minar(ultimo.hash_cadena, hash_datos, dificultadPow());
+  /** Arma la fila de la persona con dirección y teléfono cifrados y calcula su `hash_datos`. */
+  construirFila(
+    datos: DatosPersona,
+    creado_por: string,
+  ): { fila: FilaPersona; hash_datos: string } {
+    const fila: FilaPersona = {
+      cedula: datos.cedula,
+      nombre: datos.nombre,
+      direccion_cifrada: this.cifrado.cifrar(datos.direccion),
+      telefono_cifrado: this.cifrado.cifrar(datos.telefono),
+      creado_en: new Date().toISOString(),
+      creado_por,
+    };
+    return { fila, hash_datos: calcularHashDatos(fila) };
+  }
 
-          const persona = await tx.persona.create({ data: fila });
-          await tx.bloque.create({
-            data: {
-              indice: ultimo.indice + 1,
-              persona_id: persona.id,
-              hash_datos,
-              nonce: minado.nonce,
-              hash_anterior: ultimo.hash_cadena,
-              hash_cadena: minado.hashCadena,
-              creado_en,
-            },
-          });
-          return persona;
-        });
-      } catch (error) {
-        if ((error as { code?: string }).code === 'P2002') {
-          throw new ConflictException('Registro duplicado');
-        }
-        throw error;
-      }
+  /**
+   * Mina e inserta la persona y su bloque firmado. Debe llamarse dentro de `serializar` y de una
+   * transacción de Prisma (el llamador la abre y puede borrar el borrador en la misma).
+   */
+  async anexarBloqueTx(
+    tx: Prisma.TransactionClient,
+    fila: FilaPersona,
+    hash_datos: string,
+    firma_usuario: string,
+    llave_id: number,
+  ) {
+    if (await tx.persona.findUnique({ where: { cedula: fila.cedula } })) {
+      throw new ConflictException('Registro duplicado');
+    }
+    if (calcularHashDatos(fila) !== hash_datos) {
+      throw new Error('La fila del borrador no coincide con su hash');
+    }
+    const ultimo = await tx.bloque.findFirst({ orderBy: { indice: 'desc' } });
+    if (!ultimo) throw new Error('La cadena no tiene génesis');
+    const minado = minar(ultimo.hash_cadena, hash_datos, dificultadPow());
+
+    const persona = await tx.persona.create({ data: fila });
+    const bloque = await tx.bloque.create({
+      data: {
+        indice: ultimo.indice + 1,
+        persona_id: persona.id,
+        hash_datos,
+        nonce: minado.nonce,
+        hash_anterior: ultimo.hash_cadena,
+        hash_cadena: minado.hashCadena,
+        firma_usuario,
+        llave_id,
+        creado_en: fila.creado_en,
+      },
     });
+    return {
+      indice: bloque.indice,
+      persona_id: persona.id,
+      hash_datos: bloque.hash_datos,
+      hash_cadena: bloque.hash_cadena,
+    };
   }
 
   /**
    * Recalcula todos los hashes en vivo a partir de la fila ACTUAL de cada persona.
    * Va por la misma cola que los anexos para no leer una cadena a medio anexar.
-   * Aún sin firmas ni sello (H5.x): esos chequeos quedan en 'no-aplica'.
+   * Verifica también las firmas de los usuarios; el sello del servidor llega con H5.4.
    */
   verificar(): Promise<ReporteCadena> {
     return this.cola.ejecutar(async () => {
@@ -126,9 +146,13 @@ export class CadenaService implements OnModuleInit {
           creado_por: b.persona.creado_por,
         },
       }));
-      // llavesUsuarios ya incluye aprobadas y reemplazadas; sin `verificarFirma` (H5.3/H5.4) no se usan aún.
+      // llavesUsuarios incluye las llaves aprobadas y las reemplazadas (los bloques viejos siguen verificando)
       const llavesUsuarios = await this.llaves.llavesParaVerificacion();
-      return verificarCadena(bloques, { dificultad: dificultadPow(), llavesUsuarios });
+      return verificarCadena(bloques, {
+        dificultad: dificultadPow(),
+        llavesUsuarios,
+        verificarFirma: verificarFirmaNode,
+      });
     });
   }
 

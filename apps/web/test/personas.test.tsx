@@ -1,8 +1,16 @@
+import 'fake-indexeddb/auto';
 import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { webcrypto } from 'node:crypto';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { borrarPar, guardarPar } from '../src/cripto/almacen';
+import { exportarPublicaSpkiB64, generarPar, verificarFirma } from '../src/cripto/llaves';
 import { llamadas, renderizar, sesion, simularApi } from './ayudantes';
 
+beforeEach(async () => {
+  vi.stubGlobal('crypto', webcrypto);
+  await borrarPar('registrador1');
+});
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -18,6 +26,34 @@ const fila = {
   creado_por: 'registrador1',
   integra: true,
 };
+const HASH = 'ab'.repeat(32);
+const validos = {
+  cedula: '7654321',
+  nombre: 'Luis Gómez',
+  direccion: 'Carrera 5 # 6-7',
+  telefono: '3105551234',
+};
+
+/** Deja en IndexedDB la llave local del registrador y devuelve lo que diría /api/llaves/mias. */
+async function llaveLocal(estado: string | null) {
+  const par = await generarPar();
+  await guardarPar('registrador1', par);
+  const spki = await exportarPublicaSpkiB64(par.publica);
+  const mias =
+    estado === null
+      ? []
+      : [
+          {
+            id: 7,
+            version: 1,
+            estado,
+            spki_b64: spki,
+            creado_en: fila.creado_en,
+            aprobada_en: null,
+          },
+        ];
+  return { par, mias };
+}
 
 async function llenar(usuario: ReturnType<typeof userEvent.setup>, v: Record<string, string>) {
   await usuario.type(await screen.findByLabelText('Cédula'), v['cedula'] ?? '');
@@ -25,12 +61,6 @@ async function llenar(usuario: ReturnType<typeof userEvent.setup>, v: Record<str
   await usuario.type(screen.getByLabelText('Dirección'), v['direccion'] ?? '');
   await usuario.type(screen.getByLabelText('Teléfono'), v['telefono'] ?? '');
 }
-const validos = {
-  cedula: '7654321',
-  nombre: 'Luis Gómez',
-  direccion: 'Carrera 5 # 6-7',
-  telefono: '3105551234',
-};
 
 describe('Personas: tabla', () => {
   it('el registrador ve los datos reales (contrato de H4.2)', async () => {
@@ -113,48 +143,121 @@ describe('Personas: estados', () => {
   });
 });
 
-describe('Personas: formulario', () => {
-  it('con una cédula inválida muestra el error y no envía la petición', async () => {
-    const mock = simularApi({ ...sesion('registrador'), 'GET /api/personas': { cuerpo: [] } });
+describe('Personas: llave requerida para crear', () => {
+  it('sin llave local explica y enlaza a Mi llave (sin formulario)', async () => {
+    simularApi({
+      ...sesion('registrador'),
+      'GET /api/personas': { cuerpo: [] },
+      'GET /api/llaves/mias': { cuerpo: [] },
+    });
     renderizar('/personas');
+    const aviso = await screen.findByRole('region', { name: 'Llave requerida' });
+    expect(within(aviso).getByText(/no tienes una llave en este navegador/i)).toBeTruthy();
+    expect(within(aviso).getByRole('link', { name: 'Ir a Mi llave' })).toBeTruthy();
+    expect(screen.queryByLabelText('Cédula')).toBeNull();
+  });
+
+  it('llave local sin registrar en el servidor', async () => {
+    await llaveLocal(null);
+    simularApi({
+      ...sesion('registrador'),
+      'GET /api/personas': { cuerpo: [] },
+      'GET /api/llaves/mias': { cuerpo: [] },
+    });
+    renderizar('/personas');
+    const aviso = await screen.findByRole('region', { name: 'Llave requerida' });
+    expect(within(aviso).getByText(/no está registrada en el servidor/i)).toBeTruthy();
+    expect(screen.queryByLabelText('Cédula')).toBeNull();
+  });
+
+  it('llave pendiente de aprobación', async () => {
+    const { mias } = await llaveLocal('pendiente');
+    simularApi({
+      ...sesion('registrador'),
+      'GET /api/personas': { cuerpo: [] },
+      'GET /api/llaves/mias': { cuerpo: mias },
+    });
+    renderizar('/personas');
+    const aviso = await screen.findByRole('region', { name: 'Llave requerida' });
+    expect(within(aviso).getByText(/pendiente de aprobación/i)).toBeTruthy();
+    expect(screen.queryByLabelText('Cédula')).toBeNull();
+  });
+});
+
+describe('Personas: formulario firmado (preparar → firmar → confirmar)', () => {
+  async function montar(extra: Record<string, unknown> = {}) {
+    const { par, mias } = await llaveLocal('aprobada');
+    const mock = simularApi({
+      ...sesion('registrador'),
+      'GET /api/personas': { cuerpo: [] },
+      'GET /api/llaves/mias': { cuerpo: mias },
+      'POST /api/bloques/preparar': {
+        status: 201,
+        cuerpo: { borrador_id: 'b-1', hash_datos: HASH },
+      },
+      'POST /api/bloques/confirmar': { status: 201, cuerpo: { indice: 1 } },
+      ...extra,
+    });
+    renderizar('/personas');
+    return { par, mock };
+  }
+  const cuerpoDe = (mock: ReturnType<typeof simularApi>, ruta: string): Record<string, unknown> => {
+    const [, opciones] = llamadas(mock, 'POST', ruta)[0] as [string, RequestInit];
+    return JSON.parse(opciones.body as string) as Record<string, unknown>;
+  };
+
+  it('con una cédula inválida muestra el error y no pide preparar nada', async () => {
+    const { mock } = await montar();
     const usuario = userEvent.setup();
     await llenar(usuario, { ...validos, cedula: 'abc' });
     await usuario.click(screen.getByRole('button', { name: 'Crear persona' }));
     expect(await screen.findByText(/la cédula debe tener/i)).toBeTruthy();
-    expect(llamadas(mock, 'POST', '/api/personas')).toHaveLength(0);
+    expect(llamadas(mock, 'POST', '/api/bloques/preparar')).toHaveLength(0);
   });
 
-  it('con datos válidos envía el POST normalizado y recarga la lista', async () => {
-    const mock = simularApi({
-      ...sesion('registrador'),
-      'GET /api/personas': { cuerpo: [] },
-      'POST /api/personas': { status: 201, cuerpo: { id: 9 } },
-    });
-    renderizar('/personas');
+  it('prepara, firma con la llave local y confirma con una firma que verifica', async () => {
+    const { par, mock } = await montar();
     const usuario = userEvent.setup();
     await llenar(usuario, { ...validos, nombre: '  Luis Gómez ' });
     await usuario.click(screen.getByRole('button', { name: 'Crear persona' }));
-    await waitFor(() => expect(llamadas(mock, 'POST', '/api/personas')).toHaveLength(1));
-    const [, opciones] = llamadas(mock, 'POST', '/api/personas')[0] as [string, RequestInit];
-    expect(JSON.parse(opciones.body as string)).toEqual(validos);
+    await waitFor(() => expect(llamadas(mock, 'POST', '/api/bloques/confirmar')).toHaveLength(1));
+
+    expect(cuerpoDe(mock, '/api/bloques/preparar')).toEqual(validos);
+    const confirmar = cuerpoDe(mock, '/api/bloques/confirmar');
+    expect(Object.keys(confirmar).sort()).toEqual(['borrador_id', 'firma_b64', 'llave_id']);
+    expect(confirmar).toMatchObject({ borrador_id: 'b-1', llave_id: 7 });
+    expect(await verificarFirma(par.publica, HASH, confirmar['firma_b64'] as string)).toBe(true);
+    // recarga la tabla después de confirmar
     await waitFor(() =>
       expect(llamadas(mock, 'GET', '/api/personas').length).toBeGreaterThanOrEqual(2),
     );
   });
 
-  it('muestra el mensaje del servidor si responde 409', async () => {
-    simularApi({
-      ...sesion('registrador'),
-      'GET /api/personas': { cuerpo: [] },
-      'POST /api/personas': {
+  it('muestra el mensaje del servidor si preparar da 409 y no confirma', async () => {
+    const { mock } = await montar({
+      'POST /api/bloques/preparar': {
         status: 409,
         cuerpo: { statusCode: 409, mensaje: 'Registro duplicado' },
       },
     });
-    renderizar('/personas');
     const usuario = userEvent.setup();
     await llenar(usuario, validos);
     await usuario.click(screen.getByRole('button', { name: 'Crear persona' }));
     expect(await screen.findByText('Registro duplicado')).toBeTruthy();
+    expect(llamadas(mock, 'POST', '/api/bloques/confirmar')).toHaveLength(0);
+  });
+
+  it.each([
+    [410, 'El borrador expiró'],
+    [400, 'Firma inválida'],
+    [403, 'Llave no autorizada'],
+  ])('muestra el error %s de confirmar', async (status, mensaje) => {
+    await montar({
+      'POST /api/bloques/confirmar': { status, cuerpo: { statusCode: status, mensaje } },
+    });
+    const usuario = userEvent.setup();
+    await llenar(usuario, validos);
+    await usuario.click(screen.getByRole('button', { name: 'Crear persona' }));
+    expect(await screen.findByText(mensaje)).toBeTruthy();
   });
 });
