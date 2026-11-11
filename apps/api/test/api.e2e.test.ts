@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
+import { Publico } from '../src/auth/permisos.js';
 
 const WEB_ORIGIN = 'http://localhost:5173';
 
@@ -19,6 +20,7 @@ class DtoPrueba {
 }
 
 @Controller('prueba')
+@Publico()
 class PruebaController {
   @Post('dto')
   dto(@Body() body: DtoPrueba): DtoPrueba {
