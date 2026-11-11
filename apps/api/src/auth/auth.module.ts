@@ -8,6 +8,6 @@ import { JwtAuthGuard } from './jwt-auth.guard.js';
   imports: [PrismaModule, JwtModule.register({})],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard],
-  exports: [JwtAuthGuard],
+  exports: [JwtAuthGuard, AuthService],
 })
 export class AuthModule {}
