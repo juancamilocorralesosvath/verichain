@@ -39,7 +39,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H5.1](H5.1-llaves-en-navegador.md)             | Llaves del usuario en el navegador                                  | H9.1                                     | hecha     | Juan Camilo |
 | [H5.2](H5.2-registro-de-llaves.md)              | Registro, aprobación y rotación de llaves                           | H3.2                                     | hecha     | Juan Camilo |
 | [H5.3](H5.3-flujo-preparar-firmar-confirmar.md) | Bloques firmados: preparar → firmar → confirmar                     | H5.1, H5.2, H4.1, H9.2                   | hecha     | Juan Camilo |
-| [H5.4](H5.4-sello-del-servidor.md)              | Sello del servidor y cadena comprometida                            | H5.3                                     | pendiente |             |
+| [H5.4](H5.4-sello-del-servidor.md)              | Sello del servidor y cadena comprometida                            | H5.3                                     | en-curso  | Juan Camilo |
 | [H6.1](H6.1-modulo-de-ataques.md)               | Módulo de simulación de ataques                                     | H5.4                                     | pendiente |             |
 | [H6.2](H6.2-restaurar-demo.md)                  | Snapshot y "Restaurar demo"                                         | H6.1                                     | pendiente |             |
 | [H7.1](H7.1-carga-csv.md)                       | Carga masiva CSV con firma por lotes                                | H5.3                                     | pendiente |             |
