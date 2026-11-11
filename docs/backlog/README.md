@@ -31,7 +31,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H3.1](H3.1-usuarios-y-login.md)                | Usuarios, contraseñas y login                                       | H2.1                                     | hecha     | Codex       |
 | [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | pendiente |             |
 | [H3.3](H3.3-gestion-de-usuarios.md)             | Gestión de usuarios (admin)                                         | H3.2                                     | pendiente |             |
-| [H4.1](H4.1-cifrado-aes.md)                     | Cifrado AES-256-GCM de dirección y teléfono                         | H2.2                                     | en-curso  | Codex       |
+| [H4.1](H4.1-cifrado-aes.md)                     | Cifrado AES-256-GCM de dirección y teléfono                         | H2.2                                     | hecha     | Codex       |
 | [H4.2](H4.2-respuestas-por-rol.md)              | Lo que ve cada rol                                                  | H4.1, H3.2                               | pendiente |             |
 | [H5.1](H5.1-llaves-en-navegador.md)             | Llaves del usuario en el navegador                                  | H9.1                                     | pendiente |             |
 | [H5.2](H5.2-registro-de-llaves.md)              | Registro, aprobación y rotación de llaves                           | H3.2                                     | pendiente |             |
