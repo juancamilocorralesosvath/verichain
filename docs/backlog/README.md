@@ -8,8 +8,9 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 
+- **H3.2** Control de acceso por roles (disponible al mezclar H3.1).
 - **H4.1** Cifrado AES-256-GCM de dirección y teléfono.
-- **H3.1** Usuarios, contraseñas y login.
+
 - **H9.1** Web base.
 - **H11.1** CA propia y HTTPS.
 - H12.2 (el informe) no tiene dependencias técnicas, pero conviene dejarlo para después del congelamiento del 20 de noviembre.
@@ -28,7 +29,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H2.1](H2.1-api-base.md)                        | API NestJS base con seguridad por defecto                           | H0.1                                     | hecha     | Juan Camilo |
 | [H2.2](H2.2-crear-persona-y-cadena.md)          | Génesis, crear persona y consultar la cadena                        | H2.1, H1.3                               | hecha     | Juan Camilo |
 | [H2.3](H2.3-verificar-cadena-api.md)            | Endpoint de verificación                                            | H2.2, H1.4                               | hecha     | Juan Camilo |
-| [H3.1](H3.1-usuarios-y-login.md)                | Usuarios, contraseñas y login                                       | H2.1                                     | pendiente |             |
+| [H3.1](H3.1-usuarios-y-login.md)                | Usuarios, contraseñas y login                                       | H2.1                                     | hecha     | Codex       |
 | [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | pendiente |             |
 | [H3.3](H3.3-gestion-de-usuarios.md)             | Gestión de usuarios (admin)                                         | H3.2                                     | pendiente |             |
 | [H4.1](H4.1-cifrado-aes.md)                     | Cifrado AES-256-GCM de dirección y teléfono                         | H2.2                                     | pendiente |             |

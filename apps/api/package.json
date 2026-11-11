@@ -14,7 +14,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "pretest": "npm run build -w @bc/core && prisma generate",
     "test": "vitest run",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "seed": "npm run build && node --env-file-if-exists=../../.env dist/auth/ejecutar-seed.js"
   },
   "devDependencies": {
     "@nestjs/testing": "^12.4.2",
@@ -31,10 +32,12 @@
     "@bc/core": "*",
     "@nestjs/common": "^12.4.2",
     "@nestjs/core": "^12.4.2",
+    "@nestjs/jwt": "^12.0.4",
     "@nestjs/platform-express": "^12.4.2",
     "@nestjs/throttler": "^6.7.1",
     "@prisma/adapter-better-sqlite3": "^7.10.1",
     "@prisma/client": "^7.10.1",
+    "argon2": "^0.45.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "helmet": "^8.3.0",
