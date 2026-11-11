@@ -8,7 +8,6 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 
-- **H3.2** Control de acceso por roles (disponible al mezclar H3.1).
 - **H4.1** Cifrado AES-256-GCM de dirección y teléfono.
 
 - **H9.1** Web base.
@@ -30,7 +29,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H2.2](H2.2-crear-persona-y-cadena.md)          | Génesis, crear persona y consultar la cadena                        | H2.1, H1.3                               | hecha     | Juan Camilo |
 | [H2.3](H2.3-verificar-cadena-api.md)            | Endpoint de verificación                                            | H2.2, H1.4                               | hecha     | Juan Camilo |
 | [H3.1](H3.1-usuarios-y-login.md)                | Usuarios, contraseñas y login                                       | H2.1                                     | hecha     | Codex       |
-| [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | pendiente |             |
+| [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | en-curso  | Codex       |
 | [H3.3](H3.3-gestion-de-usuarios.md)             | Gestión de usuarios (admin)                                         | H3.2                                     | pendiente |             |
 | [H4.1](H4.1-cifrado-aes.md)                     | Cifrado AES-256-GCM de dirección y teléfono                         | H2.2                                     | pendiente |             |
 | [H4.2](H4.2-respuestas-por-rol.md)              | Lo que ve cada rol                                                  | H4.1, H3.2                               | pendiente |             |
