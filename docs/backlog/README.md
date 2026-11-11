@@ -46,7 +46,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H8.1](H8.1-cli-verificador.md)                 | CLI verificador independiente                                       | H7.3                                     | pendiente |             |
 | [H8.2](H8.2-verificador-web.md)                 | Verificación local en el navegador                                  | H7.3, H9.1                               | pendiente |             |
 | [H9.1](H9.1-web-base.md)                        | Web base: React + Vite, login y layout por rol                      | H0.1                                     | hecha     | Codex       |
-| [H9.2](H9.2-paginas-personas-y-cadena.md)       | Páginas Personas y Cadena                                           | H9.1, H2.2                               | pendiente |             |
+| [H9.2](H9.2-paginas-personas-y-cadena.md)       | Páginas Personas y Cadena                                           | H9.1, H2.2                               | en-curso  | Juan Camilo |
 | [H9.3](H9.3-pagina-verificar.md)                | Página Verificar                                                    | H9.2, H2.3                               | pendiente |             |
 | [H9.4](H9.4-paginas-admin-bitacora-csv.md)      | Páginas Admin, Bitácora, CSV y Exportar (se puede hacer por partes) | H9.3, H3.3, H5.2, H6.2, H7.1, H7.2, H7.3 | pendiente |             |
 | [H10.1](H10.1-sistema-visual.md)                | Sistema visual                                                      | H9.1                                     | pendiente |             |
