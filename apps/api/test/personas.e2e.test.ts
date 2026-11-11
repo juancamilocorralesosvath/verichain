@@ -7,25 +7,23 @@ import {
   calcularHashDatos,
   cumpleDificultad,
   type FilaPersona,
+  type ReporteCadena,
 } from '@bc/core';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
+import { CifradoService } from '../src/cripto/cifrado.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
-import { hash } from 'argon2';
-import { CifradoService } from '../src/cripto/cifrado.service.js';
+import {
+  crearFirmante,
+  crearPersonaFirmada,
+  datosPersona,
+  type Firmante,
+} from './ayudantes-firma.js';
 
 const DIFICULTAD = 2;
-let seq = 0;
-const persona = (extra: Record<string, unknown> = {}): Record<string, unknown> => ({
-  cedula: String(1_000_000 + ++seq),
-  nombre: 'Ana Pérez',
-  direccion: 'Calle 1 # 2-3',
-  telefono: '+573001234567',
-  ...extra,
-});
 
 async function crearApp(): Promise<INestApplication> {
   const ref = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -44,31 +42,20 @@ interface BloqueApi {
   hash_cadena: string;
 }
 
-describe('Génesis, personas y cadena', () => {
+describe('Génesis, personas y cadena (con bloques firmados)', () => {
   let app: INestApplication;
   let url: string;
-  let cookie = '';
+  let firmante: Firmante;
   const http = (): ReturnType<typeof request.agent> =>
-    request.agent(app.getHttpServer()).set('Cookie', cookie);
+    request.agent(app.getHttpServer()).set('Cookie', firmante.cookie);
   const cadena = async (): Promise<BloqueApi[]> =>
     (await http().get('/api/cadena').expect(200)).body as BloqueApi[];
+  const crear = (datos?: Record<string, unknown>) => crearPersonaFirmada(app, firmante, datos);
 
   beforeAll(async () => {
     url = crearBdTemporal();
     app = await crearApp();
-    const prisma = app.get(PrismaService);
-    await prisma.usuario.create({
-      data: {
-        username: 'registrador1',
-        rol: 'registrador',
-        password_hash: await hash('clave-de-prueba-123'),
-      },
-    });
-    const login = await request(app.getHttpServer())
-      .post('/api/auth/login')
-      .send({ username: 'registrador1', password: 'clave-de-prueba-123' })
-      .expect(201);
-    cookie = (login.headers['set-cookie'] as unknown as string[])[0] ?? '';
+    firmante = await crearFirmante(app, 'registrador1');
   });
   afterAll(async () => {
     await app.close();
@@ -91,8 +78,8 @@ describe('Génesis, personas y cadena', () => {
     expect(await cadena()).toHaveLength(1);
   });
 
-  it('crear 3 personas produce 4 bloques enlazados y con PoW', async () => {
-    for (let i = 0; i < 3; i++) await http().post('/api/personas').send(persona()).expect(201);
+  it('crear 3 personas produce 4 bloques enlazados, con PoW y firma verificable', async () => {
+    for (let i = 0; i < 3; i++) expect((await crear()).status).toBe(201);
     const bloques = await cadena();
     expect(bloques.map((b) => b.indice)).toEqual([0, 1, 2, 3]);
     bloques.forEach((b, i) => {
@@ -101,12 +88,17 @@ describe('Génesis, personas y cadena', () => {
       if (i > 0) expect(b.hash_anterior).toBe((bloques[i - 1] as BloqueApi).hash_cadena);
     });
     expect(bloques.slice(1).every((b) => b.persona_id !== null)).toBe(true);
+    const reporte = (await http().get('/api/cadena/verificar').expect(403)).body; // el registrador no verifica
+    expect(reporte.statusCode).toBe(403);
   });
 
   it('hash_datos guardado = calcularHashDatos de la fila leída de la BD', async () => {
-    const res = await http().post('/api/personas').send(persona()).expect(201);
+    const res = await crear();
+    expect(res.status).toBe(201);
     const prisma = app.get(PrismaService);
-    const p = await prisma.persona.findUniqueOrThrow({ where: { id: res.body.id as number } });
+    const p = await prisma.persona.findUniqueOrThrow({
+      where: { id: res.body['persona_id'] as number },
+    });
     const b = await prisma.bloque.findUniqueOrThrow({ where: { persona_id: p.id } });
     const fila: FilaPersona = {
       cedula: p.cedula,
@@ -137,29 +129,30 @@ describe('Génesis, personas y cadena', () => {
     ['tipo incorrecto', { cedula: 1234567 }],
   ])('400: %s', async (_nombre, extra) => {
     const antes = (await cadena()).length;
-    await http().post('/api/personas').send(persona(extra)).expect(400);
+    expect((await crear(datosPersona(extra))).status).toBe(400);
     expect(await cadena()).toHaveLength(antes);
   });
 
   it('409 con cédula repetida, sin crear bloque ni filtrar detalles', async () => {
-    const p = persona();
-    await http().post('/api/personas').send(p).expect(201);
+    const p = datosPersona();
+    expect((await crear(p)).status).toBe(201);
     const antes = (await cadena()).length;
-    const res = await http().post('/api/personas').send(p).expect(409);
+    const res = await crear(p);
+    expect(res.status).toBe(409);
     expect(res.body).toEqual({ statusCode: 409, mensaje: 'Registro duplicado' });
     expect(await cadena()).toHaveLength(antes);
   });
 
   it('normaliza la entrada: trim y NFC', async () => {
-    const nfd = 'José Núñez'; // José Núñez descompuesto
-    const res = await http()
-      .post('/api/personas')
-      .send(persona({ nombre: `  ${nfd}  `, direccion: '  Carrera 5 # 6-7  ' }))
-      .expect(201);
+    const nfd = 'José Núñez'; // José Núñez descompuesto
+    const res = await crear(
+      datosPersona({ nombre: `  ${nfd}  `, direccion: '  Carrera 5 # 6-7  ' }),
+    );
+    expect(res.status).toBe(201);
     const lista = (await http().get('/api/personas').expect(200)).body as Array<
       Record<string, unknown>
     >;
-    const creada = lista.find((x) => x['id'] === res.body.id);
+    const creada = lista.find((x) => x['id'] === res.body['persona_id']);
     expect(creada?.['nombre']).toBe('José Núñez'.normalize('NFC'));
     expect(
       new CifradoService(process.env['DATA_KEY']).descifrar(
@@ -168,11 +161,9 @@ describe('Génesis, personas y cadena', () => {
     ).toBe('Carrera 5 # 6-7');
   });
 
-  it('dos POST concurrentes no repiten índices ni rompen enlaces', async () => {
+  it('varias confirmaciones concurrentes no repiten índices ni rompen enlaces', async () => {
     const antes = (await cadena()).length;
-    const respuestas = await Promise.all(
-      Array.from({ length: 6 }, () => http().post('/api/personas').send(persona())),
-    );
+    const respuestas = await Promise.all(Array.from({ length: 6 }, () => crear()));
     expect(respuestas.every((r) => r.status === 201)).toBe(true);
     const bloques = await cadena();
     expect(bloques).toHaveLength(antes + 6);
@@ -186,5 +177,18 @@ describe('Génesis, personas y cadena', () => {
   it('GET /api/personas lista las personas creadas', async () => {
     const lista = (await http().get('/api/personas').expect(200)).body as unknown[];
     expect(lista.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('la cadena completa verifica (con un auditor)', async () => {
+    const { crearUsuario } = await import('./ayudantes-firma.js');
+    const auditor = await crearUsuario(app, 'auditor-final', 'auditor');
+    const r = (
+      await request(app.getHttpServer())
+        .get('/api/cadena/verificar')
+        .set('Cookie', auditor.cookie)
+        .expect(200)
+    ).body as ReporteCadena;
+    expect(r.valida).toBe(true);
+    expect(r.bloques.slice(1).every((b) => b.chequeos.firmaUsuario === 'ok')).toBe(true);
   });
 });

@@ -15,6 +15,7 @@ model Usuario {
   activo        Boolean        @default(true)
   creado_en     DateTime       @default(now())
   llaves        LlaveUsuario[]
+  borradores    Borrador[]
 }
 
 /// Llave pública ECDSA P-256 de un usuario. Las llaves viejas nunca se borran (§7b).
@@ -30,6 +31,16 @@ model LlaveUsuario {
   aprobada_en  DateTime?
 
   @@unique([usuario_id, version])
+}
+
+/// Registro preparado que espera la firma del usuario (§5.3). Expira en 5 minutos.
+model Borrador {
+  id         String   @id @default(uuid())
+  usuario_id Int
+  usuario    Usuario  @relation(fields: [usuario_id], references: [id])
+  fila_json  String // la FilaPersona ya cifrada: el hash incluye el texto cifrado
+  hash_datos String
+  expira_en  DateTime
 }
 
 model Persona {

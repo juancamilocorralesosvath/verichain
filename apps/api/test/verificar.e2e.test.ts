@@ -7,24 +7,21 @@ import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
-import { hash } from 'argon2';
-
-let seq = 0;
-const persona = (): Record<string, string> => ({
-  cedula: String(2_000_000 + ++seq),
-  nombre: 'Ana Pérez',
-  direccion: 'Calle 1 # 2-3',
-  telefono: '3001234567',
-});
+import {
+  crearFirmante,
+  crearPersonaFirmada,
+  crearUsuario,
+  type Firmante,
+  type Sesion,
+} from './ayudantes-firma.js';
 
 describe('GET /api/cadena/verificar', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let registrador = '';
-  let auditor = '';
+  let firmante: Firmante;
+  let auditor: Sesion;
   const http = () => ({
-    get: (ruta: string) => request(app.getHttpServer()).get(ruta).set('Cookie', auditor),
-    post: (ruta: string) => request(app.getHttpServer()).post(ruta).set('Cookie', registrador),
+    get: (ruta: string) => request(app.getHttpServer()).get(ruta).set('Cookie', auditor.cookie),
   });
   const verificar = async (): Promise<ReporteCadena> =>
     (await http().get('/api/cadena/verificar').expect(200)).body as ReporteCadena;
@@ -36,17 +33,8 @@ describe('GET /api/cadena/verificar', () => {
     configurarApp(app, 'http://localhost:5173');
     await app.init();
     prisma = app.get(PrismaService);
-    const password_hash = await hash('clave-de-prueba-123');
-    for (const rol of ['registrador', 'auditor']) {
-      await prisma.usuario.create({ data: { username: rol, rol, password_hash } });
-      const login = await request(app.getHttpServer())
-        .post('/api/auth/login')
-        .send({ username: rol, password: 'clave-de-prueba-123' })
-        .expect(201);
-      const cookie = (login.headers['set-cookie'] as unknown as string[])[0] ?? '';
-      if (rol === 'registrador') registrador = cookie;
-      else auditor = cookie;
-    }
+    firmante = await crearFirmante(app, 'registrador');
+    auditor = await crearUsuario(app, 'auditor', 'auditor');
   });
   afterAll(async () => {
     await app.close();
@@ -58,8 +46,8 @@ describe('GET /api/cadena/verificar', () => {
     expect(r.totalBloques).toBe(1);
   });
 
-  it('cadena recién creada con 3 personas: válida, firmas y sello no aplican', async () => {
-    for (let i = 0; i < 3; i++) await http().post('/api/personas').send(persona()).expect(201);
+  it('cadena recién creada con 3 personas firmadas: válida; el sello aún no aplica', async () => {
+    for (let i = 0; i < 3; i++) expect((await crearPersonaFirmada(app, firmante)).status).toBe(201);
     const r = await verificar();
     expect(r.valida).toBe(true);
     expect(r.primerBloqueRoto).toBeNull();
@@ -70,7 +58,8 @@ describe('GET /api/cadena/verificar', () => {
       expect(b.chequeos.enlace).toBe('ok');
       expect(b.chequeos.hashCadena).toBe('ok');
       expect(b.chequeos.pow).toBe('ok');
-      expect(b.chequeos.firmaUsuario).toBe('no-aplica');
+      // la firma del usuario se verifica en todos los bloques menos en el génesis
+      expect(b.chequeos.firmaUsuario).toBe(b.indice === 0 ? 'no-aplica' : 'ok');
     }
   });
 
@@ -98,6 +87,20 @@ describe('GET /api/cadena/verificar', () => {
     expect(r.bloques[2]?.chequeos.hashCadena).toBe('falla');
     expect(r.bloques[2]?.motivos.join(' ')).toMatch(/datos de la persona/);
     expect(r.bloques[1]?.chequeos.hashDatos).toBe('ok');
+  });
+
+  it('una firma que no corresponde a la llave rompe firmaUsuario en ese bloque', async () => {
+    const original = await prisma.bloque.findUniqueOrThrow({ where: { indice: 1 } });
+    const ajena = (await prisma.bloque.findUniqueOrThrow({ where: { indice: 3 } })).firma_usuario;
+    await prisma.bloque.update({ where: { indice: 1 }, data: { firma_usuario: ajena } });
+    const r = await verificar();
+    expect(r.bloques[1]?.chequeos.firmaUsuario).toBe('falla');
+    expect(r.bloques[1]?.motivos.join(' ')).toMatch(/firma del usuario/);
+    expect(r.primerBloqueRoto).toBe(1);
+    await prisma.bloque.update({
+      where: { indice: 1 },
+      data: { firma_usuario: original.firma_usuario },
+    });
   });
 
   it('modificar hash_anterior de un bloque rompe el enlace', async () => {

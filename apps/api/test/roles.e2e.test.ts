@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
+import { firmarConLlave, nuevoParEcdsa } from './ayudantes-firma.js';
 import { ModulesContainer } from '@nestjs/core';
 import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { RequestMethod } from '@nestjs/common';
@@ -37,7 +38,9 @@ describe('Matriz de permisos', () => {
     await app?.close();
   });
   const rutas = [
-    { metodo: 'post', ruta: '/api/personas', codigos: [403, 201, 403, 401] },
+    { metodo: 'post', ruta: '/api/bloques/preparar', codigos: [403, 201, 403, 401] },
+    // con el cuerpo de una persona, confirmar es una petición inválida para quien sí tiene el rol
+    { metodo: 'post', ruta: '/api/bloques/confirmar', codigos: [403, 400, 403, 401] },
     { metodo: 'get', ruta: '/api/personas', codigos: [403, 200, 200, 401] },
     { metodo: 'get', ruta: '/api/cadena', codigos: [200, 200, 200, 401] },
     { metodo: 'get', ruta: '/api/cadena/verificar', codigos: [200, 403, 200, 401] },
@@ -59,7 +62,33 @@ describe('Matriz de permisos', () => {
     }
   }
   it('asocia el creador a la fila y a su hash', async () => {
-    const fila = await prisma.persona.findUniqueOrThrow({ where: { cedula: '1234567' } });
+    // el registrador firma su propio registro con una llave aprobada (flujo de H5.3)
+    const usuario = await prisma.usuario.findUniqueOrThrow({ where: { username: 'registrador1' } });
+    const { privada, spki } = nuevoParEcdsa();
+    const llave = await prisma.llaveUsuario.create({
+      data: { usuario_id: usuario.id, version: 1, spki_b64: spki, estado: 'aprobada' },
+    });
+    const preparar = await request(app.getHttpServer())
+      .post('/api/bloques/preparar')
+      .set('Cookie', cookies['registrador'] ?? '')
+      .send({
+        cedula: '7654321',
+        nombre: 'Luis Gómez',
+        direccion: 'Calle 2 # 3-4',
+        telefono: '3001112222',
+      })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/api/bloques/confirmar')
+      .set('Cookie', cookies['registrador'] ?? '')
+      .send({
+        borrador_id: preparar.body.borrador_id,
+        llave_id: llave.id,
+        firma_b64: firmarConLlave(privada)(preparar.body.hash_datos),
+      })
+      .expect(201);
+
+    const fila = await prisma.persona.findUniqueOrThrow({ where: { cedula: '7654321' } });
     const bloque = await prisma.bloque.findUniqueOrThrow({ where: { persona_id: fila.id } });
     expect(fila.creado_por).toBe('registrador1');
     const { cedula, nombre, direccion_cifrada, telefono_cifrado, creado_en, creado_por } = fila;

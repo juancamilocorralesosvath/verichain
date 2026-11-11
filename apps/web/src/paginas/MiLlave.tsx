@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { ErrorApi } from '../api/cliente';
+import { misLlaves, registrarLlave } from '../api/llaves';
 import { guardarPar, leerPar } from '../cripto/almacen';
 import {
   ErrorRespaldo,
@@ -12,7 +14,18 @@ import {
 import { useSesion } from '../sesion';
 
 const mensajeDe = (e: unknown): string =>
-  e instanceof ErrorRespaldo ? e.message : 'No fue posible completar la operación';
+  e instanceof ErrorRespaldo || e instanceof ErrorApi
+    ? e.message
+    : 'No fue posible completar la operación';
+
+const textoEstado: Record<string, string> = {
+  'no-registrada': 'no está registrada en el servidor',
+  pendiente: 'pendiente de aprobación por un administrador',
+  aprobada: 'aprobada',
+  reemplazada: 'reemplazada por una llave más nueva',
+  rechazada: 'rechazada',
+  desconocido: 'no se pudo consultar',
+};
 
 const leerTexto = (archivo: File): Promise<string> =>
   new Promise((resolver, rechazar) => {
@@ -29,6 +42,7 @@ export function MiLlave() {
   const [par, setPar] = useState<ParLlaves | null>(null);
   const [spki, setSpki] = useState('');
   const [huella, setHuella] = useState('');
+  const [servidor, setServidor] = useState('');
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
   const [passwordRespaldo, setPasswordRespaldo] = useState('');
@@ -40,11 +54,30 @@ export function MiLlave() {
     if (!nuevo) {
       setSpki('');
       setHuella('');
+      setServidor('');
       return;
     }
     const valor = await exportarPublicaSpkiB64(nuevo.publica);
     setSpki(valor);
     setHuella((await huellaSpkiHex(valor)).slice(0, 32));
+    try {
+      const registrada = (await misLlaves()).find((l) => l.spki_b64 === valor);
+      setServidor(registrada ? registrada.estado : 'no-registrada');
+    } catch {
+      setServidor('desconocido');
+    }
+  }
+
+  async function registrar() {
+    setError('');
+    setAviso('');
+    try {
+      await registrarLlave(spki);
+      setServidor('pendiente');
+      setAviso('Llave registrada. Un administrador debe aprobarla antes de que puedas firmar.');
+    } catch (e) {
+      setError(mensajeDe(e));
+    }
   }
 
   useEffect(() => {
@@ -138,6 +171,10 @@ export function MiLlave() {
           <p>Llave pública (SPKI, base64):</p>
           <code>{spki}</code>
           <p>Huella SHA-256: {huella}</p>
+          <p>Estado en el servidor: {textoEstado[servidor] ?? ''}</p>
+          {servidor === 'no-registrada' && (
+            <button onClick={() => void registrar()}>Registrar en el servidor</button>
+          )}
         </section>
       ) : (
         <section aria-label="Sin llave">
