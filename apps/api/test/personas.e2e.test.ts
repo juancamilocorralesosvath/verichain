@@ -15,6 +15,7 @@ import { configurarApp } from '../src/configurar-app.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
 import { hash } from 'argon2';
+import { CifradoService } from '../src/cripto/cifrado.service.js';
 
 const DIFICULTAD = 2;
 let seq = 0;
@@ -117,6 +118,11 @@ describe('Génesis, personas y cadena', () => {
     };
     expect(b.hash_datos).toBe(calcularHashDatos(fila));
     expect(p.creado_por).toBe('registrador1');
+    expect(p.direccion_cifrada).not.toContain('Calle 1 # 2-3');
+    expect(p.telefono_cifrado).not.toContain('573001234567');
+    const cifrado = new CifradoService(process.env['DATA_KEY']);
+    expect(cifrado.descifrar(p.direccion_cifrada)).toBe('Calle 1 # 2-3');
+    expect(cifrado.descifrar(p.telefono_cifrado)).toBe('+573001234567');
   });
 
   it.each([
@@ -155,7 +161,11 @@ describe('Génesis, personas y cadena', () => {
     >;
     const creada = lista.find((x) => x['id'] === res.body.id);
     expect(creada?.['nombre']).toBe('José Núñez'.normalize('NFC'));
-    expect(creada?.['direccion_cifrada']).toBe('Carrera 5 # 6-7');
+    expect(
+      new CifradoService(process.env['DATA_KEY']).descifrar(
+        creada?.['direccion_cifrada'] as string,
+      ),
+    ).toBe('Carrera 5 # 6-7');
   });
 
   it('dos POST concurrentes no repiten índices ni rompen enlaces', async () => {

@@ -5,7 +5,10 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [swc.vite({ module: { type: 'es6' } })],
   test: {
-    env: { JWT_SECRET: 'clave-exclusiva-para-pruebas' },
+    env: {
+      JWT_SECRET: 'clave-exclusiva-para-pruebas',
+      DATA_KEY: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+    },
     include: ['test/**/*.test.ts'],
     environment: 'node',
     globalSetup: ['test/globalSetup.ts'],
