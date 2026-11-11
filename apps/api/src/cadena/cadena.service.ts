@@ -12,6 +12,7 @@ import {
 import { Cola } from '../comun/cola.js';
 import { dificultadPow } from '../comun/config.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { CifradoService } from '../cripto/cifrado.service.js';
 
 export interface DatosPersona {
   cedula: string;
@@ -25,7 +26,10 @@ export class CadenaService implements OnModuleInit {
   /** Serializa los anexos: un solo servidor, un anexo a la vez. */
   private readonly cola = new Cola();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cifrado: CifradoService,
+  ) {}
 
   /** Génesis automático: solo si la cadena está vacía. */
   async onModuleInit(): Promise<void> {
@@ -60,9 +64,8 @@ export class CadenaService implements OnModuleInit {
           const fila: FilaPersona = {
             cedula: datos.cedula,
             nombre: datos.nombre,
-            // TODO(H4.1): cifrar con AES-256-GCM; por ahora texto plano provisional
-            direccion_cifrada: datos.direccion,
-            telefono_cifrado: datos.telefono,
+            direccion_cifrada: this.cifrado.cifrar(datos.direccion),
+            telefono_cifrado: this.cifrado.cifrar(datos.telefono),
             creado_en,
             creado_por: 'anonimo', // TODO(H3.x): el usuario autenticado
           };
