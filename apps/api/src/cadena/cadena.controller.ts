@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { CadenaService } from './cadena.service.js';
+import { Roles } from '../auth/permisos.js';
 
 @Controller('cadena')
 export class CadenaController {
@@ -10,8 +11,8 @@ export class CadenaController {
     return this.cadena.listarCadena();
   }
 
-  // Público por ahora: H3.2 le pone guards por rol.
   @Get('verificar')
+  @Roles('admin', 'auditor')
   verificar() {
     return this.cadena.verificar();
   }

@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { CookieOptions, Response } from 'express';
 import { AuthService } from './auth.service.js';
-import { JwtAuthGuard, type SolicitudAutenticada } from './jwt-auth.guard.js';
+import type { SolicitudAutenticada } from './jwt-auth.guard.js';
+import { Publico } from './permisos.js';
 import { LoginDto } from './login.dto.js';
 
 const opcionesCookie = (): CookieOptions => ({
@@ -15,6 +16,7 @@ const opcionesCookie = (): CookieOptions => ({
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
   @Post('login')
+  @Publico()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async login(
     @Body() dto: LoginDto,
@@ -29,7 +31,6 @@ export class AuthController {
     res.clearCookie('sesion', opcionesCookie());
   }
   @Get('yo')
-  @UseGuards(JwtAuthGuard)
   yo(@Req() req: SolicitudAutenticada): { username: string; rol: string } {
     return { username: req.identidad.username, rol: req.identidad.rol };
   }

@@ -8,10 +8,11 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 
-- **H3.2** Control de acceso por roles (disponible al mezclar H3.1).
+- **H3.3**, **H5.2** y **H7.2** (disponibles al mezclar H3.2).
+- **H4.2** Lo que ve cada rol (disponible al mezclar H4.1).
 
-- **H9.1** Web base.
-- **H11.1** CA propia y HTTPS.
+- **H5.1**, **H9.2** y **H10.1** (disponibles al mezclar H9.1).
+- **H11.2** Docker Compose con nginx TLS (disponible al mezclar H11.1).
 - H12.2 (el informe) no tiene dependencias técnicas, pero conviene dejarlo para después del congelamiento del 20 de noviembre.
 
 ## Tablero
@@ -29,7 +30,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H2.2](H2.2-crear-persona-y-cadena.md)          | Génesis, crear persona y consultar la cadena                        | H2.1, H1.3                               | hecha     | Juan Camilo |
 | [H2.3](H2.3-verificar-cadena-api.md)            | Endpoint de verificación                                            | H2.2, H1.4                               | hecha     | Juan Camilo |
 | [H3.1](H3.1-usuarios-y-login.md)                | Usuarios, contraseñas y login                                       | H2.1                                     | hecha     | Codex       |
-| [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | pendiente |             |
+| [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | hecha     | Codex       |
 | [H3.3](H3.3-gestion-de-usuarios.md)             | Gestión de usuarios (admin)                                         | H3.2                                     | pendiente |             |
 | [H4.1](H4.1-cifrado-aes.md)                     | Cifrado AES-256-GCM de dirección y teléfono                         | H2.2                                     | hecha     | Codex       |
 | [H4.2](H4.2-respuestas-por-rol.md)              | Lo que ve cada rol                                                  | H4.1, H3.2                               | pendiente |             |
@@ -44,14 +45,14 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H7.3](H7.3-exportar-cadena.md)                 | Exportar la cadena                                                  | H5.4                                     | pendiente |             |
 | [H8.1](H8.1-cli-verificador.md)                 | CLI verificador independiente                                       | H7.3                                     | pendiente |             |
 | [H8.2](H8.2-verificador-web.md)                 | Verificación local en el navegador                                  | H7.3, H9.1                               | pendiente |             |
-| [H9.1](H9.1-web-base.md)                        | Web base: React + Vite, login y layout por rol                      | H0.1                                     | pendiente |             |
+| [H9.1](H9.1-web-base.md)                        | Web base: React + Vite, login y layout por rol                      | H0.1                                     | hecha     | Codex       |
 | [H9.2](H9.2-paginas-personas-y-cadena.md)       | Páginas Personas y Cadena                                           | H9.1, H2.2                               | pendiente |             |
 | [H9.3](H9.3-pagina-verificar.md)                | Página Verificar                                                    | H9.2, H2.3                               | pendiente |             |
 | [H9.4](H9.4-paginas-admin-bitacora-csv.md)      | Páginas Admin, Bitácora, CSV y Exportar (se puede hacer por partes) | H9.3, H3.3, H5.2, H6.2, H7.1, H7.2, H7.3 | pendiente |             |
 | [H10.1](H10.1-sistema-visual.md)                | Sistema visual                                                      | H9.1                                     | pendiente |             |
 | [H10.2](H10.2-vista-cadena-visual.md)           | Cadena como bloques conectados                                      | H10.1, H9.3                              | pendiente |             |
 | [H10.3](H10.3-pulido-y-modo-presentacion.md)    | Pulido y modo presentación                                          | H10.1, H9.4                              | pendiente |             |
-| [H11.1](H11.1-ca-propia-https.md)               | CA propia y certificado HTTPS                                       | H0.1                                     | pendiente |             |
+| [H11.1](H11.1-ca-propia-https.md)               | CA propia y certificado HTTPS                                       | H0.1                                     | hecha     | Codex       |
 | [H11.2](H11.2-docker-compose.md)                | Docker Compose con nginx TLS                                        | H11.1, H2.3                              | pendiente |             |
 | [H12.1](H12.1-readme.md)                        | README del proyecto                                                 | H6.2, H8.1                               | pendiente |             |
 | [H12.2](H12.2-informe.md)                       | Informe final                                                       | (tras el congelamiento)                  | pendiente |             |

@@ -56,7 +56,10 @@ describe('Autenticación', () => {
       .get('/api/auth/yo')
       .set('Authorization', `Bearer ${cookie.split(';')[0]?.slice(7)}`)
       .expect(401);
-    const salida = await request(app.getHttpServer()).post('/api/auth/logout').expect(201);
+    const salida = await request(app.getHttpServer())
+      .post('/api/auth/logout')
+      .set('Cookie', cookie)
+      .expect(201);
     expect(salida.headers['set-cookie']?.[0]).toMatch(/sesion=;.*Path=\/api/);
   });
 

@@ -14,6 +14,7 @@ import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
+import { hash } from 'argon2';
 import { CifradoService } from '../src/cripto/cifrado.service.js';
 
 const DIFICULTAD = 2;
@@ -46,13 +47,28 @@ interface BloqueApi {
 describe('Génesis, personas y cadena', () => {
   let app: INestApplication;
   let url: string;
-  const http = (): ReturnType<typeof request> => request(app.getHttpServer());
+  let cookie = '';
+  const http = (): ReturnType<typeof request.agent> =>
+    request.agent(app.getHttpServer()).set('Cookie', cookie);
   const cadena = async (): Promise<BloqueApi[]> =>
     (await http().get('/api/cadena').expect(200)).body as BloqueApi[];
 
   beforeAll(async () => {
     url = crearBdTemporal();
     app = await crearApp();
+    const prisma = app.get(PrismaService);
+    await prisma.usuario.create({
+      data: {
+        username: 'registrador1',
+        rol: 'registrador',
+        password_hash: await hash('clave-de-prueba-123'),
+      },
+    });
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ username: 'registrador1', password: 'clave-de-prueba-123' })
+      .expect(201);
+    cookie = (login.headers['set-cookie'] as unknown as string[])[0] ?? '';
   });
   afterAll(async () => {
     await app.close();
@@ -101,7 +117,7 @@ describe('Génesis, personas y cadena', () => {
       creado_por: p.creado_por,
     };
     expect(b.hash_datos).toBe(calcularHashDatos(fila));
-    expect(p.creado_por).toBe('anonimo');
+    expect(p.creado_por).toBe('registrador1');
     expect(p.direccion_cifrada).not.toContain('Calle 1 # 2-3');
     expect(p.telefono_cifrado).not.toContain('573001234567');
     const cifrado = new CifradoService(process.env['DATA_KEY']);
