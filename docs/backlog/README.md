@@ -11,6 +11,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 - **H3.2** Control de acceso por roles (disponible al mezclar H3.1).
 - **H4.1** Cifrado AES-256-GCM de dirección y teléfono.
 
+- **H5.1**, **H9.2** y **H10.1** (disponibles al mezclar H9.1).
 - **H11.1** CA propia y HTTPS.
 - H12.2 (el informe) no tiene dependencias técnicas, pero conviene dejarlo para después del congelamiento del 20 de noviembre.
 
@@ -44,7 +45,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H7.3](H7.3-exportar-cadena.md)                 | Exportar la cadena                                                  | H5.4                                     | pendiente |             |
 | [H8.1](H8.1-cli-verificador.md)                 | CLI verificador independiente                                       | H7.3                                     | pendiente |             |
 | [H8.2](H8.2-verificador-web.md)                 | Verificación local en el navegador                                  | H7.3, H9.1                               | pendiente |             |
-| [H9.1](H9.1-web-base.md)                        | Web base: React + Vite, login y layout por rol                      | H0.1                                     | en-curso  | Codex       |
+| [H9.1](H9.1-web-base.md)                        | Web base: React + Vite, login y layout por rol                      | H0.1                                     | hecha     | Codex       |
 | [H9.2](H9.2-paginas-personas-y-cadena.md)       | Páginas Personas y Cadena                                           | H9.1, H2.2                               | pendiente |             |
 | [H9.3](H9.3-pagina-verificar.md)                | Página Verificar                                                    | H9.2, H2.3                               | pendiente |             |
 | [H9.4](H9.4-paginas-admin-bitacora-csv.md)      | Páginas Admin, Bitácora, CSV y Exportar (se puede hacer por partes) | H9.3, H3.3, H5.2, H6.2, H7.1, H7.2, H7.3 | pendiente |             |
