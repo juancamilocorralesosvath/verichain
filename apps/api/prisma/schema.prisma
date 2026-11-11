@@ -8,12 +8,28 @@ datasource db {
 }
 
 model Usuario {
-  id            Int      @id @default(autoincrement())
-  username      String   @unique
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
   password_hash String
   rol           String
-  activo        Boolean  @default(true)
-  creado_en     DateTime @default(now())
+  activo        Boolean        @default(true)
+  creado_en     DateTime       @default(now())
+  llaves        LlaveUsuario[]
+}
+
+/// Llave pública ECDSA P-256 de un usuario. Las llaves viejas nunca se borran (§7b).
+model LlaveUsuario {
+  id           Int       @id @default(autoincrement())
+  usuario_id   Int
+  usuario      Usuario   @relation(fields: [usuario_id], references: [id])
+  version      Int
+  spki_b64     String    @unique
+  estado       String // pendiente | aprobada | reemplazada | rechazada
+  creado_en    DateTime  @default(now())
+  aprobada_por Int?
+  aprobada_en  DateTime?
+
+  @@unique([usuario_id, version])
 }
 
 model Persona {
