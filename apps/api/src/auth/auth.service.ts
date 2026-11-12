@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { argon2id, hash, verify } from 'argon2';
+import { BitacoraService } from '../bitacora/bitacora.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export interface Identidad {
@@ -16,6 +17,7 @@ export class AuthService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly bitacora: BitacoraService,
   ) {
     const secret = process.env['JWT_SECRET'];
     if (!secret?.trim()) throw new Error('JWT_SECRET es obligatorio');
@@ -27,14 +29,28 @@ export class AuthService implements OnModuleInit {
   async login(
     username: string,
     password: string,
+    ip: string,
   ): Promise<{ token: string; usuario: { username: string; rol: string } }> {
     const usuario = await this.prisma.usuario.findUnique({ where: { username } });
     const valido = await verify(usuario?.password_hash ?? this.ficticio, password);
     if (!usuario || !valido || !usuario.activo) {
-      // TODO(H7.2): registrar login fallido.
+      // no se guarda lo escrito en el campo usuario: a menudo es una contraseña
+      await this.bitacora.registrar({
+        usuario: '-',
+        accion: 'login_fallido',
+        resultado: 'fallo',
+        ip,
+        detalle: 'credenciales inválidas',
+      });
       throw new UnauthorizedException('Credenciales inválidas');
     }
-    // TODO(H7.2): registrar login exitoso.
+    await this.bitacora.registrar({
+      usuario: usuario.username,
+      accion: 'login',
+      resultado: 'ok',
+      ip,
+      detalle: 'inicio de sesión',
+    });
     const identidad: Identidad = { sub: usuario.id, username: usuario.username, rol: usuario.rol };
     const expiresIn = (process.env['JWT_EXPIRES_IN'] ?? '15m') as JwtSignOptions['expiresIn'];
     const token = await this.jwt.signAsync(identidad, {

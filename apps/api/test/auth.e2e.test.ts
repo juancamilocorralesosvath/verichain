@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module.js';
 import { configurarApp } from '../src/configurar-app.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { seedAdmin } from '../src/auth/seed.js';
+import { BitacoraService } from '../src/bitacora/bitacora.service.js';
 import { AuthService } from '../src/auth/auth.service.js';
 import { crearBdTemporal } from './ayudantes-bd.js';
 
@@ -73,7 +74,9 @@ describe('Autenticación', () => {
     const anterior = process.env['JWT_SECRET'];
     process.env['JWT_SECRET'] = '';
     try {
-      expect(() => new AuthService(prisma, new JwtService())).toThrow('JWT_SECRET');
+      expect(() => new AuthService(prisma, new JwtService(), app.get(BitacoraService))).toThrow(
+        'JWT_SECRET',
+      );
     } finally {
       process.env['JWT_SECRET'] = anterior;
     }

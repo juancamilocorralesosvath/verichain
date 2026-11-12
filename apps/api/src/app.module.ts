@@ -6,6 +6,7 @@ import { esModoDemo } from './ataques/modo-demo.js';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
 import { RolesGuard } from './auth/roles.guard.js';
+import { BitacoraModule } from './bitacora/bitacora.module.js';
 import { BloquesModule } from './bloques/bloques.module.js';
 import { CadenaModule } from './cadena/cadena.module.js';
 import { LlavesModule } from './llaves/llaves.module.js';
@@ -19,6 +20,7 @@ import { SaludController } from './salud/salud.controller.js';
     // 100 solicitudes por minuto por IP
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
+    BitacoraModule,
     AuthModule,
     CadenaModule,
     BloquesModule,

@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import type { SolicitudAutenticada } from '../auth/jwt-auth.guard.js';
 import { Roles } from '../auth/permisos.js';
+import { contextoDe } from '../bitacora/contexto.js';
 import { AtaquesService } from './ataques.service.js';
 import { EjecutarAtaqueDto } from './dto/ejecutar-ataque.dto.js';
 
@@ -15,7 +17,11 @@ export class AtaquesController {
   }
 
   @Post(':id')
-  ejecutar(@Param('id') id: string, @Body() dto: EjecutarAtaqueDto) {
-    return this.ataques.ejecutar(id, dto.indice);
+  ejecutar(
+    @Param('id') id: string,
+    @Body() dto: EjecutarAtaqueDto,
+    @Req() req: SolicitudAutenticada,
+  ) {
+    return this.ataques.ejecutar(id, dto.indice, contextoDe(req));
   }
 }

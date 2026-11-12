@@ -103,6 +103,24 @@ describe('Snapshot y restaurar demo (DEMO_MODE=true)', () => {
     expect((await verificar()).valida).toBe(true);
   });
 
+  it('registra el ataque, el snapshot y la restauración en la bitácora (que sigue siendo válida)', async () => {
+    const leer = async () =>
+      (await http().get('/api/bitacora').set('Cookie', admin.cookie).expect(200)).body as {
+        entradas: Array<{ accion: string; detalle: string }>;
+        verificacion: { valida: boolean };
+      };
+    await como(admin, '/api/demo/snapshot').expect(201);
+    await como(admin, '/api/ataques/truncar').expect(201);
+    const antes = (await leer()).entradas.map((e) => e.accion);
+    expect(antes).toEqual(expect.arrayContaining(['snapshot', 'ataque']));
+    await como(admin, '/api/demo/restaurar').expect(201);
+    // restaurar vuelve la BD (y la bitácora) al estado del snapshot y se encadena una entrada nueva encima
+    const despues = await leer();
+    expect(despues.entradas[0]?.accion).toBe('restaurar');
+    expect(despues.entradas.map((e) => e.accion)).not.toContain('ataque');
+    expect(despues.verificacion.valida).toBe(true);
+  });
+
   it('solo el admin: auditor y registrador 403, sin sesión 401', async () => {
     for (const ruta of ['/api/demo/snapshot', '/api/demo/restaurar']) {
       await como(auditor, ruta).expect(403);

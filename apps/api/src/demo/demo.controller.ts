@@ -1,5 +1,7 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Post, Req } from '@nestjs/common';
+import type { SolicitudAutenticada } from '../auth/jwt-auth.guard.js';
 import { Roles } from '../auth/permisos.js';
+import { contextoDe } from '../bitacora/contexto.js';
 import { DemoService } from './demo.service.js';
 
 /** Solo existe con DEMO_MODE=true y solo para el admin. */
@@ -9,12 +11,12 @@ export class DemoController {
   constructor(private readonly demo: DemoService) {}
 
   @Post('snapshot')
-  snapshot() {
-    return this.demo.snapshot();
+  snapshot(@Req() req: SolicitudAutenticada) {
+    return this.demo.snapshot(contextoDe(req));
   }
 
   @Post('restaurar')
-  restaurar() {
-    return this.demo.restaurar();
+  restaurar(@Req() req: SolicitudAutenticada) {
+    return this.demo.restaurar(contextoDe(req));
   }
 }

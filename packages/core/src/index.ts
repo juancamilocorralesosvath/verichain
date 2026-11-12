@@ -27,3 +27,9 @@ export { serializarPersona } from './canonico.js';
 export { sha256Hex, calcularHashDatos, calcularHashCadena } from './hash.js';
 export { cumpleDificultad, minar, type ResultadoMinado } from './pow.js';
 export { HASH_CERO, DATOS_GENESIS, HASH_DATOS_GENESIS } from './genesis.js';
+export {
+  CAMPOS_BITACORA,
+  hashEntradaBitacora,
+  verificarBitacora,
+  type EntradaBitacora,
+} from './bitacora.js';

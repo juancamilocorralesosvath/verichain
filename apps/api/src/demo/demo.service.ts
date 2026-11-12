@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { ConflictException, Injectable } from '@nestjs/common';
 import Database from 'better-sqlite3';
 import type { ReporteCadena } from '@bc/core';
+import { BitacoraService, type ContextoAuditoria } from '../bitacora/bitacora.service.js';
 import { CadenaService } from '../cadena/cadena.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -16,6 +17,7 @@ export class DemoService {
   constructor(
     private readonly cadena: CadenaService,
     private readonly prisma: PrismaService,
+    private readonly bitacora: BitacoraService,
   ) {}
 
   private rutaBd(): string {
@@ -28,8 +30,8 @@ export class DemoService {
   }
 
   /** Guarda una copia de la BD en `snapshot.db` (junto a la BD), reemplazando la anterior. */
-  snapshot(): Promise<{ guardado: true; bloques: number }> {
-    return this.cadena.serializar(async () => {
+  async snapshot(ctx: ContextoAuditoria): Promise<{ guardado: true; bloques: number }> {
+    const resultado = await this.cadena.serializar(async () => {
       const destino = this.rutaSnapshot();
       const origen = new Database(this.rutaBd(), { readonly: true, fileMustExist: true });
       try {
@@ -40,11 +42,20 @@ export class DemoService {
       }
       return { guardado: true as const, bloques: await this.prisma.bloque.count() };
     });
+    await this.bitacora.registrar({
+      ...ctx,
+      accion: 'snapshot',
+      resultado: 'ok',
+      detalle: `bloques ${resultado.bloques}`,
+    });
+    return resultado;
   }
 
   /** Reemplaza el contenido de la BD por el del snapshot y devuelve el resultado de verificar. */
-  restaurar(): Promise<{ restaurado: true; verificacion: ReporteCadena }> {
-    return this.cadena.serializar(async () => {
+  async restaurar(
+    ctx: ContextoAuditoria,
+  ): Promise<{ restaurado: true; verificacion: ReporteCadena }> {
+    const resultado = await this.cadena.serializar(async () => {
       if (!existsSync(this.rutaSnapshot())) {
         throw new ConflictException('No hay snapshot: guarda uno antes de restaurar');
       }
@@ -54,8 +65,15 @@ export class DemoService {
       } finally {
         origen.close();
       }
-      // TODO(H7.2): registrar la restauración en la bitácora
       return { restaurado: true as const, verificacion: await this.cadena.verificarSinCola() };
     });
+    // la bitácora también volvió al estado del snapshot: esta entrada se encadena sobre ese estado
+    await this.bitacora.registrar({
+      ...ctx,
+      accion: 'restaurar',
+      resultado: 'ok',
+      detalle: `bloques ${resultado.verificacion.totalBloques}, válida: ${resultado.verificacion.valida ? 'sí' : 'no'}`,
+    });
+    return resultado;
   }
 }

@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BitacoraService, type ContextoAuditoria } from '../bitacora/bitacora.service.js';
 import { Cola } from '../comun/cola.js';
 import type { LlaveUsuario } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -19,12 +20,15 @@ export class LlavesService {
   /** Serializa registros y aprobaciones (un solo servidor). */
   private readonly cola = new Cola();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bitacora: BitacoraService,
+  ) {}
 
   /** Registra una llave pública: queda `pendiente`, con la versión siguiente del usuario. */
-  registrar(usuarioId: number, spkiB64: string) {
+  async registrar(usuarioId: number, spkiB64: string, ctx: ContextoAuditoria) {
     validarLlaveP256(spkiB64);
-    return this.cola.ejecutar(async () => {
+    const resultado = await this.cola.ejecutar(async () => {
       try {
         return await this.prisma.$transaction(async (tx) => {
           if (await tx.llaveUsuario.findUnique({ where: { spki_b64: spkiB64 } })) {
@@ -42,7 +46,6 @@ export class LlavesService {
               estado: 'pendiente',
             },
           });
-          // TODO(H7.2): registrar el evento en la bitácora
           return aRespuesta(llave);
         });
       } catch (error) {
@@ -52,6 +55,14 @@ export class LlavesService {
         throw error;
       }
     });
+    // fuera de la transacción: la bitácora usa la misma conexión de SQLite
+    await this.bitacora.registrar({
+      ...ctx,
+      accion: 'llave_registrar',
+      resultado: 'ok',
+      detalle: `llave ${resultado.id} versión ${resultado.version}`,
+    });
+    return resultado;
   }
 
   async mias(usuarioId: number) {
@@ -72,8 +83,8 @@ export class LlavesService {
   }
 
   /** Aprueba una llave pendiente; la aprobada anterior del mismo usuario pasa a `reemplazada`. */
-  aprobar(adminId: number, id: number) {
-    return this.cola.ejecutar(() =>
+  async aprobar(adminId: number, id: number, ctx: ContextoAuditoria) {
+    const resultado = await this.cola.ejecutar(() =>
       this.prisma.$transaction(async (tx) => {
         const llave = await this.pendienteOFallar(tx, id);
         // primero se retira la vigente: el índice parcial permite una sola `aprobada` por usuario
@@ -85,24 +96,36 @@ export class LlavesService {
           where: { id },
           data: { estado: 'aprobada', aprobada_por: adminId, aprobada_en: new Date() },
         });
-        // TODO(H7.2): registrar la aprobación en la bitácora
         return aRespuesta(aprobada);
       }),
     );
+    await this.bitacora.registrar({
+      ...ctx,
+      accion: 'llave_aprobar',
+      resultado: 'ok',
+      detalle: `llave ${id}`,
+    });
+    return resultado;
   }
 
-  rechazar(id: number) {
-    return this.cola.ejecutar(() =>
+  async rechazar(id: number, ctx: ContextoAuditoria) {
+    const resultado = await this.cola.ejecutar(() =>
       this.prisma.$transaction(async (tx) => {
         await this.pendienteOFallar(tx, id);
         const rechazada = await tx.llaveUsuario.update({
           where: { id },
           data: { estado: 'rechazada' },
         });
-        // TODO(H7.2): registrar el rechazo en la bitácora
         return aRespuesta(rechazada);
       }),
     );
+    await this.bitacora.registrar({
+      ...ctx,
+      accion: 'llave_rechazar',
+      resultado: 'ok',
+      detalle: `llave ${id}`,
+    });
+    return resultado;
   }
 
   /** llave_id → spki_b64 de las llaves con las que pudo firmarse un bloque (aprobadas y reemplazadas). */

@@ -42,6 +42,7 @@ describe('Matriz de permisos', () => {
     // con el cuerpo de una persona, confirmar es una petición inválida para quien sí tiene el rol
     { metodo: 'post', ruta: '/api/bloques/confirmar', codigos: [403, 400, 403, 401] },
     { metodo: 'get', ruta: '/api/personas', codigos: [403, 200, 200, 401] },
+    { metodo: 'get', ruta: '/api/bitacora', codigos: [200, 403, 200, 401] },
     { metodo: 'get', ruta: '/api/cadena', codigos: [200, 200, 200, 401] },
     { metodo: 'get', ruta: '/api/cadena/verificar', codigos: [200, 403, 200, 401] },
   ] as const;
