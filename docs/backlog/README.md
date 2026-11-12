@@ -4,6 +4,18 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 **Cómo tomar una historia:** `git switch main && git pull` → elige una `pendiente` con todas sus dependencias en `hecha` → crea la rama `h<épica>-<n>-<slug>` desde `main` → en su primer commit cambia `estado`, `tomada_por` y `fecha` en su archivo **y** en esta tabla → `git push -u` y PR en borrador. Se mezcla a `main` solo por PR; nunca se pushea directo a `main`.
 
+## Reparto (acordado el 12 de noviembre)
+
+Para terminar a tiempo, el trabajo restante se reparte así. La guía detallada para Alexis y su agente está en
+[`docs/guia-alexis.md`](../guia-alexis.md) y el prompt listo para pegar en
+[`docs/prompt-agente-alexis.md`](../prompt-agente-alexis.md).
+
+| Quién                      | Historias                                                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Juan Camilo** (hechas)   | H6.1, H6.2, H7.3, H8.1, H7.2, H3.3 y H4.2 (más todo lo anterior hasta H5.4)                                            |
+| **Alexis** (en este orden) | H9.3, H7.1, H8.2, H9.4, H11.2 y H10.1                                                                                  |
+| **Cierre** (cualquiera)    | H10.2, H10.3, H12.1, H12.3 y, tras el congelamiento del 20 de noviembre, H12.2 (se reparten según quién termine antes) |
+
 ## Disponibles ahora
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
