@@ -1,0 +1,28 @@
+{
+  "name": "@bc/verificador",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI que verifica una cadena exportada sin confiar en el servidor (diseño §5.9).",
+  "bin": {
+    "verificador": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "pretest": "npm run build -w @bc/core && npm run build",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "fixtures": "node --experimental-strip-types test/generar-fixtures.ts"
+  },
+  "dependencies": {
+    "@bc/core": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0"
+  }
+}
