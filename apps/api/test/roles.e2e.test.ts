@@ -43,6 +43,7 @@ describe('Matriz de permisos', () => {
     { metodo: 'post', ruta: '/api/bloques/confirmar', codigos: [403, 400, 403, 401] },
     { metodo: 'get', ruta: '/api/personas', codigos: [403, 200, 200, 401] },
     { metodo: 'get', ruta: '/api/bitacora', codigos: [200, 403, 200, 401] },
+    { metodo: 'get', ruta: '/api/usuarios', codigos: [200, 403, 403, 401] },
     { metodo: 'get', ruta: '/api/cadena', codigos: [200, 200, 200, 401] },
     { metodo: 'get', ruta: '/api/cadena/verificar', codigos: [200, 403, 200, 401] },
   ] as const;
@@ -125,10 +126,13 @@ describe('Matriz de permisos', () => {
           );
           rutas.push(`${RequestMethod[metodo]} ${ruta}${publico ? ' público' : ''}`);
           if (publico) continue;
+          const servidor = request(app.getHttpServer());
           const req =
             metodo === RequestMethod.GET
-              ? request(app.getHttpServer()).get(ruta)
-              : request(app.getHttpServer()).post(ruta);
+              ? servidor.get(ruta)
+              : metodo === RequestMethod.PATCH
+                ? servidor.patch(ruta)
+                : servidor.post(ruta);
           await req.expect(401);
         }
       }

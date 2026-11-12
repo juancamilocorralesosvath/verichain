@@ -11,6 +11,7 @@ import { BloquesModule } from './bloques/bloques.module.js';
 import { CadenaModule } from './cadena/cadena.module.js';
 import { LlavesModule } from './llaves/llaves.module.js';
 import { DemoModule } from './demo/demo.module.js';
+import { UsuariosModule } from './usuarios/usuarios.module.js';
 import { PersonasModule } from './personas/personas.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { SaludController } from './salud/salud.controller.js';
@@ -21,6 +22,7 @@ import { SaludController } from './salud/salud.controller.js';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     BitacoraModule,
+    UsuariosModule,
     AuthModule,
     CadenaModule,
     BloquesModule,
