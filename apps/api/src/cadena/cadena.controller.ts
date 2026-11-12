@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { CadenaService } from './cadena.service.js';
 import { Publico, Roles } from '../auth/permisos.js';
 
@@ -16,6 +17,18 @@ export class CadenaController {
   @Publico()
   llaveServidor() {
     return this.cadena.llaveServidor();
+  }
+
+  @Get('exportar')
+  @Roles('admin', 'auditor')
+  async exportar(@Res({ passthrough: true }) res: Response) {
+    const exportacion = await this.cadena.exportar();
+    // cadena-AAAAMMDD-HHmm.json (UTC)
+    const marca = exportacion.exportado_en
+      .replace(/[-:]/g, '')
+      .replace(/^(\d{8})T(\d{4}).*$/, '$1-$2');
+    res.setHeader('Content-Disposition', `attachment; filename="cadena-${marca}.json"`);
+    return exportacion;
   }
 
   @Get('verificar')

@@ -5,9 +5,12 @@ import {
   calcularHashDatos,
   minar,
   verificarCadena,
+  FORMATO_EXPORTACION,
   type BloqueCadena,
+  type Exportacion,
   type FilaPersona,
   type ReporteCadena,
+  type Sello,
 } from '@bc/core';
 import { Cola } from '../comun/cola.js';
 import { dificultadPow } from '../comun/config.js';
@@ -146,13 +149,14 @@ export class CadenaService implements OnModuleInit {
     return this.cola.ejecutar(() => this.verificarSinCola());
   }
 
-  /** Verificación completa sin pasar por la cola: solo para quien ya está dentro de ella. */
-  async verificarSinCola(): Promise<ReporteCadena> {
+  /** Lee la cadena, las llaves de los usuarios y el sello vigente (sin pasar por la cola). */
+  private async leerEstado() {
     const filas = await this.prisma.bloque.findMany({
       orderBy: { indice: 'asc' },
       include: { persona: true },
     });
     // Mapeo explícito: no se cuela ningún campo interno de Prisma (id, persona_id...).
+    // La persona siempre lleva dirección y teléfono CIFRADOS: nunca se descifra aquí.
     const bloques: BloqueCadena[] = filas.map((b) => ({
       indice: b.indice,
       hash_datos: b.hash_datos,
@@ -173,20 +177,27 @@ export class CadenaService implements OnModuleInit {
     // llavesUsuarios incluye las llaves aprobadas y las reemplazadas (los bloques viejos siguen verificando)
     const llavesUsuarios = await this.llaves.llavesParaVerificacion();
     const vigente = await this.prisma.sello.findFirst({ orderBy: { id: 'desc' } });
+    const sello: Sello | null = vigente && {
+      indice: vigente.indice,
+      hash_cadena: vigente.hash_cadena,
+      firma: vigente.firma,
+    };
+    return { bloques, llavesUsuarios, sello };
+  }
+
+  /** Verificación completa sin pasar por la cola: solo para quien ya está dentro de ella. */
+  async verificarSinCola(): Promise<ReporteCadena> {
+    const { bloques, llavesUsuarios, sello } = await this.leerEstado();
     const reporte = await verificarCadena(bloques, {
       dificultad: dificultadPow(),
       llavesUsuarios,
       verificarFirma: verificarFirmaNode,
-      sello: vigente && {
-        indice: vigente.indice,
-        hash_cadena: vigente.hash_cadena,
-        firma: vigente.firma,
-      },
+      sello,
       llavePublicaServidor: this.firmaServidor.llavePublicaSpkiB64(),
     });
     // Sin ningún sello el core responde "no aplica"; aquí falta por completo, y eso no se puede
     // aceptar (si no, borrar la tabla de sellos silenciaría la detección).
-    if (!vigente) {
+    if (!sello) {
       return {
         ...reporte,
         valida: false,
@@ -197,6 +208,28 @@ export class CadenaService implements OnModuleInit {
       };
     }
     return reporte;
+  }
+
+  /**
+   * Exportación `bc-export/1` para el verificador independiente (§5.9): la cadena con las filas
+   * cifradas, las llaves de los usuarios, el sello y la llave pública del servidor con su huella.
+   */
+  exportar(): Promise<Exportacion> {
+    return this.cola.ejecutar(async () => {
+      const { bloques, llavesUsuarios, sello } = await this.leerEstado();
+      return {
+        formato: FORMATO_EXPORTACION,
+        exportado_en: new Date().toISOString(),
+        dificultad: dificultadPow(),
+        bloques,
+        llaves_usuarios: Object.fromEntries(
+          Object.entries(llavesUsuarios).map(([id, spki]) => [id, spki]),
+        ),
+        sello,
+        llave_servidor_spki_b64: this.firmaServidor.llavePublicaSpkiB64(),
+        huella_llave_servidor: this.firmaServidor.huellaSha256Hex(),
+      };
+    });
   }
 
   /** Antes de anexar: si la cadena no verifica por completo, no se escribe nada (409). */
