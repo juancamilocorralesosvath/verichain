@@ -53,6 +53,18 @@ model Sello {
   creado_en   DateTime @default(now())
 }
 
+/// Bitácora de auditoría append-only, encadenada con hash (§5.10). Solo se escribe con BitacoraService.
+model Bitacora {
+  id        Int    @id @default(autoincrement())
+  fecha     String // ISO UTC con ms
+  usuario   String
+  accion    String
+  resultado String // ok | fallo
+  ip        String
+  detalle   String
+  hash      String
+}
+
 model Persona {
   id                Int     @id @default(autoincrement())
   cedula            String  @unique

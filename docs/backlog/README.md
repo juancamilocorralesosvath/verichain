@@ -8,13 +8,12 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 
-- **H8.2** Verificación local en el navegador (usa `parsearExportacion` y `aOpcionesVerificacion`).
+- **H3.3** Gestión de usuarios y **H4.2** Lo que ve cada rol (nuestras dos siguientes).
 - **H7.1** Carga masiva CSV con firma por lotes.
-- **H7.2** Bitácora y **H3.3** gestión de usuarios (disponibles al mezclar H3.2).
-- **H4.2** Lo que ve cada rol.
+- **H8.2** Verificación local en el navegador (usa `parsearExportacion` y `aOpcionesVerificacion`).
 - **H9.3** Página Verificar y **H10.1** sistema visual.
 - **H11.2** Docker Compose con nginx TLS.
-- H12.1 (README) ya tiene sus dependencias (H6.2 y H8.1); H12.2 (el informe) conviene dejarlo para después del congelamiento del 20 de noviembre.
+- H12.1 (README) ya tiene sus dependencias; H12.2 (el informe) conviene dejarlo para después del congelamiento del 20 de noviembre.
 
 ## Tablero
 
@@ -42,7 +41,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H6.1](H6.1-modulo-de-ataques.md)               | Módulo de simulación de ataques                                     | H5.4                                     | hecha     | Juan Camilo |
 | [H6.2](H6.2-restaurar-demo.md)                  | Snapshot y "Restaurar demo"                                         | H6.1                                     | hecha     | Juan Camilo |
 | [H7.1](H7.1-carga-csv.md)                       | Carga masiva CSV con firma por lotes                                | H5.3                                     | pendiente |             |
-| [H7.2](H7.2-bitacora.md)                        | Bitácora de auditoría encadenada                                    | H3.2, H1.2                               | en-curso  | Juan Camilo |
+| [H7.2](H7.2-bitacora.md)                        | Bitácora de auditoría encadenada                                    | H3.2, H1.2                               | hecha     | Juan Camilo |
 | [H7.3](H7.3-exportar-cadena.md)                 | Exportar la cadena                                                  | H5.4                                     | hecha     | Juan Camilo |
 | [H8.1](H8.1-cli-verificador.md)                 | CLI verificador independiente                                       | H7.3                                     | hecha     | Juan Camilo |
 | [H8.2](H8.2-verificador-web.md)                 | Verificación local en el navegador                                  | H7.3, H9.1                               | pendiente |             |

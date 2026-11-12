@@ -3,10 +3,12 @@ import {
   ConflictException,
   ForbiddenException,
   GoneException,
+  HttpException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import type { FilaPersona } from '@bc/core';
+import { BitacoraService, type ContextoAuditoria } from '../bitacora/bitacora.service.js';
 import { CadenaService } from '../cadena/cadena.service.js';
 import { verificarFirmaNode } from '../cripto/verificador-firma.node.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -20,10 +22,16 @@ export class BloquesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cadena: CadenaService,
+    private readonly bitacora: BitacoraService,
   ) {}
 
   /** Paso 1: valida, cifra y guarda un borrador; devuelve el `hash_datos` que el usuario debe firmar. */
-  async preparar(usuarioId: number, username: string, datos: CrearPersonaDto) {
+  async preparar(
+    usuarioId: number,
+    username: string,
+    datos: CrearPersonaDto,
+    ctx: ContextoAuditoria,
+  ) {
     // limpieza de borradores vencidos
     await this.prisma.borrador.deleteMany({ where: { expira_en: { lt: new Date() } } });
     if (await this.prisma.persona.findUnique({ where: { cedula: datos.cedula } })) {
@@ -38,7 +46,12 @@ export class BloquesService {
         expira_en: new Date(Date.now() + VIDA_DEL_BORRADOR_MS),
       },
     });
-    // TODO(H7.2): registrar la preparación en la bitácora
+    await this.bitacora.registrar({
+      ...ctx,
+      accion: 'preparar_bloque',
+      resultado: 'ok',
+      detalle: `borrador ${borrador.id.slice(0, 8)}`,
+    });
     return { borrador_id: borrador.id, hash_datos };
   }
 
@@ -46,8 +59,33 @@ export class BloquesService {
    * Paso 3: verifica la firma del usuario y recién entonces mina y anexa el bloque.
    * Todo va por la cola de anexos: un mismo borrador no se puede confirmar dos veces.
    */
-  confirmar(usuarioId: number, dto: ConfirmarBloqueDto) {
+  confirmar(usuarioId: number, dto: ConfirmarBloqueDto, ctx: ContextoAuditoria) {
     return this.cadena.serializar(async () => {
+      try {
+        const bloque = await this.confirmarEnCola(usuarioId, dto);
+        // fuera de la transacción: la bitácora usa la misma conexión de SQLite
+        await this.bitacora.registrar({
+          ...ctx,
+          accion: 'crear_bloque',
+          resultado: 'ok',
+          detalle: `bloque ${bloque.indice}`,
+        });
+        return bloque;
+      } catch (error) {
+        await this.bitacora.registrar({
+          ...ctx,
+          accion: 'crear_bloque',
+          resultado: 'fallo',
+          detalle: error instanceof HttpException ? error.message : 'error interno',
+        });
+        throw error;
+      }
+    });
+  }
+
+  /** Cuerpo de `confirmar`; ya corre dentro de la cola de anexos. */
+  private async confirmarEnCola(usuarioId: number, dto: ConfirmarBloqueDto) {
+    {
       const borrador = await this.prisma.borrador.findUnique({ where: { id: dto.borrador_id } });
       // el borrador de otro usuario se trata como inexistente
       if (!borrador || borrador.usuario_id !== usuarioId) {
@@ -77,7 +115,6 @@ export class BloquesService {
             llave.id,
           );
           await tx.borrador.delete({ where: { id: borrador.id } });
-          // TODO(H7.2): registrar el bloque creado en la bitácora
           return bloque;
         });
       } catch (error) {
@@ -86,6 +123,6 @@ export class BloquesService {
         }
         throw error;
       }
-    });
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import type { CookieOptions, Response } from 'express';
+import type { CookieOptions, Request, Response } from 'express';
 import { AuthService } from './auth.service.js';
 import type { SolicitudAutenticada } from './jwt-auth.guard.js';
 import { Publico } from './permisos.js';
@@ -20,9 +20,10 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async login(
     @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ username: string; rol: string }> {
-    const { token, usuario } = await this.auth.login(dto.username, dto.password);
+    const { token, usuario } = await this.auth.login(dto.username, dto.password, req.ip ?? '-');
     res.cookie('sesion', token, opcionesCookie());
     return usuario;
   }

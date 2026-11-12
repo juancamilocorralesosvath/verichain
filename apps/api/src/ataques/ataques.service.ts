@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { calcularHashDatos, minar, HASH_CERO } from '@bc/core';
+import { BitacoraService, type ContextoAuditoria } from '../bitacora/bitacora.service.js';
 import { CadenaService } from '../cadena/cadena.service.js';
 import { dificultadPow } from '../comun/config.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -54,6 +55,7 @@ export class AtaquesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cadena: CadenaService,
+    private readonly bitacora: BitacoraService,
   ) {}
 
   catalogo(): AtaqueInfo[] {
@@ -64,9 +66,36 @@ export class AtaquesService {
    * Ejecuta el ataque escribiendo directo en la BD con Prisma, saltándose la lógica de la
    * aplicación (como lo haría alguien con acceso a la base). Va por la cola de anexos.
    */
-  ejecutar(id: string, indiceSolicitado?: number): Promise<{ ejecutado: true; detalle: string }> {
+  async ejecutar(
+    id: string,
+    indiceSolicitado: number | undefined,
+    ctx: ContextoAuditoria,
+  ): Promise<{ ejecutado: true; detalle: string }> {
     if (!CATALOGO.some((a) => a.id === id)) throw new NotFoundException('Recurso no encontrado');
-    // TODO(H7.2): registrar el ataque en la bitácora
+    try {
+      const resultado = await this.ejecutarEnCola(id, indiceSolicitado);
+      await this.bitacora.registrar({
+        ...ctx,
+        accion: 'ataque',
+        resultado: 'ok',
+        detalle: `${id}: ${resultado.detalle}`,
+      });
+      return resultado;
+    } catch (error) {
+      await this.bitacora.registrar({
+        ...ctx,
+        accion: 'ataque',
+        resultado: 'fallo',
+        detalle: `${id}: ${error instanceof Error ? error.message : 'error'}`,
+      });
+      throw error;
+    }
+  }
+
+  private ejecutarEnCola(
+    id: string,
+    indiceSolicitado?: number,
+  ): Promise<{ ejecutado: true; detalle: string }> {
     return this.cadena.serializar(async () => {
       const ultimo =
         (await this.prisma.bloque.aggregate({ _max: { indice: true } }))._max.indice ?? 0;
