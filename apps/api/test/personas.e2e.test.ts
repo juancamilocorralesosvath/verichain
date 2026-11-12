@@ -154,11 +154,8 @@ describe('Génesis, personas y cadena (con bloques firmados)', () => {
     >;
     const creada = lista.find((x) => x['id'] === res.body['persona_id']);
     expect(creada?.['nombre']).toBe('José Núñez'.normalize('NFC'));
-    expect(
-      new CifradoService(process.env['DATA_KEY']).descifrar(
-        creada?.['direccion_cifrada'] as string,
-      ),
-    ).toBe('Carrera 5 # 6-7');
+    // el registrador recibe la dirección ya descifrada (H4.2)
+    expect(creada?.['direccion']).toBe('Carrera 5 # 6-7');
   });
 
   it('varias confirmaciones concurrentes no repiten índices ni rompen enlaces', async () => {
