@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AtaquesModule } from './ataques/ataques.module.js';
+import { esModoDemo } from './ataques/modo-demo.js';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
 import { RolesGuard } from './auth/roles.guard.js';
@@ -19,6 +21,8 @@ import { SaludController } from './salud/salud.controller.js';
     AuthModule,
     CadenaModule,
     BloquesModule,
+    // el módulo de ataques solo se registra con DEMO_MODE=true: si no, sus rutas no existen
+    ...(esModoDemo() ? [AtaquesModule] : []),
     LlavesModule,
     PersonasModule,
   ],
