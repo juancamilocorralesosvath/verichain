@@ -9,6 +9,7 @@ import { RolesGuard } from './auth/roles.guard.js';
 import { BloquesModule } from './bloques/bloques.module.js';
 import { CadenaModule } from './cadena/cadena.module.js';
 import { LlavesModule } from './llaves/llaves.module.js';
+import { DemoModule } from './demo/demo.module.js';
 import { PersonasModule } from './personas/personas.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { SaludController } from './salud/salud.controller.js';
@@ -22,7 +23,7 @@ import { SaludController } from './salud/salud.controller.js';
     CadenaModule,
     BloquesModule,
     // el módulo de ataques solo se registra con DEMO_MODE=true: si no, sus rutas no existen
-    ...(esModoDemo() ? [AtaquesModule] : []),
+    ...(esModoDemo() ? [AtaquesModule, DemoModule] : []),
     LlavesModule,
     PersonasModule,
   ],
