@@ -33,6 +33,16 @@ describe('Ataques con DEMO_MODE desactivado', () => {
       .expect(404);
   });
 
+  it('POST /api/demo/snapshot y /restaurar → 404', async () => {
+    for (const ruta of ['/api/demo/snapshot', '/api/demo/restaurar']) {
+      await request(app.getHttpServer())
+        .post(ruta)
+        .set('Cookie', admin.cookie)
+        .send({})
+        .expect(404);
+    }
+  });
+
   it('GET /api/ataques → 404', async () => {
     await request(app.getHttpServer()).get('/api/ataques').set('Cookie', admin.cookie).expect(404);
   });
