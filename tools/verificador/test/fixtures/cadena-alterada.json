@@ -1,0 +1,78 @@
+{
+  "formato": "bc-export/1",
+  "exportado_en": "2026-11-12T10:30:00.000Z",
+  "dificultad": 2,
+  "bloques": [
+    {
+      "indice": 0,
+      "hash_datos": "901131d838b17aac0f7885b81e03cbdc9f5157a00343d30ab22083685ed1416a",
+      "nonce": 899,
+      "hash_anterior": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash_cadena": "00f726db8bb5d30440db47de9cff74bb120c777ed1a1eca4d8bbbeb73930a53c",
+      "firma_usuario": null,
+      "llave_id": null,
+      "persona": null
+    },
+    {
+      "indice": 1,
+      "hash_datos": "8f80617351bfcab19ca0e478bf2627fcbbc9f5736c0909029ece5507dd5f0bb6",
+      "nonce": 169,
+      "hash_anterior": "00f726db8bb5d30440db47de9cff74bb120c777ed1a1eca4d8bbbeb73930a53c",
+      "hash_cadena": "000f70da58e1dad9d8475656f5a4b49d49d8b3038d4010eb16627c60dc8e96bb",
+      "firma_usuario": "z+IXn32Oy0c07WY3JePzgRr8T2PGEg9fjrHFBFPmuACpPIaKt0U3T86VXUeh3z7ASHmH64oJb2i/Vzb/e9HP6Q==",
+      "llave_id": 1,
+      "persona": {
+        "cedula": "1000001",
+        "nombre": "Ana Pérez",
+        "direccion_cifrada": "ZGlyZWNjaW9uLWNpZnJhZGEtMXh4eHh4eHh4eHh4eHh4eHh4eHh4eA==",
+        "telefono_cifrado": "dGVsZWZvbm8tY2lmcmFkby0xeXl5eXl5eXl5eXl5eXl5eXl5eXl5eQ==",
+        "creado_en": "2026-11-12T10:01:00.000Z",
+        "creado_por": "registrador1"
+      }
+    },
+    {
+      "indice": 2,
+      "hash_datos": "850923e6251da79b435a384274a582e85c27d29fcb2715bed7db2d4d2366af75",
+      "nonce": 508,
+      "hash_anterior": "000f70da58e1dad9d8475656f5a4b49d49d8b3038d4010eb16627c60dc8e96bb",
+      "hash_cadena": "00127eda68b31cf2e74f9e0d58f3b4f647db549a067eef78a4887d71e8b365af",
+      "firma_usuario": "XtM0w/bf4jDenrsjibQfrJHfj5iOKuOyG0TZlQSVQSIpeovMzEAyiNId2JckYrBjBytOPhRfu5bVxnbws9IbYQ==",
+      "llave_id": 1,
+      "persona": {
+        "cedula": "1000002",
+        "nombre": "Mallory",
+        "direccion_cifrada": "ZGlyZWNjaW9uLWNpZnJhZGEtMnh4eHh4eHh4eHh4eHh4eHh4eHh4eA==",
+        "telefono_cifrado": "dGVsZWZvbm8tY2lmcmFkby0yeXl5eXl5eXl5eXl5eXl5eXl5eXl5eQ==",
+        "creado_en": "2026-11-12T10:02:00.000Z",
+        "creado_por": "registrador1"
+      }
+    },
+    {
+      "indice": 3,
+      "hash_datos": "f5398b19e847a2f64c15f127380f24206087df3a9ec5eca291220e531c2dfab7",
+      "nonce": 72,
+      "hash_anterior": "00127eda68b31cf2e74f9e0d58f3b4f647db549a067eef78a4887d71e8b365af",
+      "hash_cadena": "00ac2e484fee07568be76ce8fd64b481c9452abdbe1baf697dee31170ebb162b",
+      "firma_usuario": "q+Ge8VSPRfEguweaM4Y8trM82nlmjlwBSpqs9l/bxM+Jcyu1aayK6N76W9BFYt+v519awCF98KdWlAEUl2r0Qw==",
+      "llave_id": 1,
+      "persona": {
+        "cedula": "1000003",
+        "nombre": "María Peña",
+        "direccion_cifrada": "ZGlyZWNjaW9uLWNpZnJhZGEtM3h4eHh4eHh4eHh4eHh4eHh4eHh4eA==",
+        "telefono_cifrado": "dGVsZWZvbm8tY2lmcmFkby0zeXl5eXl5eXl5eXl5eXl5eXl5eXl5eQ==",
+        "creado_en": "2026-11-12T10:03:00.000Z",
+        "creado_por": "registrador1"
+      }
+    }
+  ],
+  "llaves_usuarios": {
+    "1": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEn5JtuFcheSj70HPGsEWdSaCyD1Gbf9Eihg8tH7FJ5A8LtNOtUZVetJi81w/DI+aF0FCqMtG1IyHxU5JH4RJ/Xw=="
+  },
+  "sello": {
+    "indice": 3,
+    "hash_cadena": "00ac2e484fee07568be76ce8fd64b481c9452abdbe1baf697dee31170ebb162b",
+    "firma": "LMictqnRZLN5Y9ezE4CzdEh+Vdc9YaOlNTZ7GwXCK1Quh8ve4FEfM4fAL003V6zHSlbumim4uflGB7r6vEfbzw=="
+  },
+  "llave_servidor_spki_b64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEx5jR21zbtZDTApgHfTo3t5h2dlgq9fgmf2nFaf4akxUw64z5Rkf6d+EC6U2coEy5HkuQDE51DP7oI5xhGLf3vg==",
+  "huella_llave_servidor": "ab68e1c4d80dc28774bb4e569a0109d34b9fa26df80e4c934984c57a853bbbfc"
+}
