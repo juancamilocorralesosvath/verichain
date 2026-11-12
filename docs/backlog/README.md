@@ -42,7 +42,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H6.1](H6.1-modulo-de-ataques.md)               | Módulo de simulación de ataques                                     | H5.4                                     | hecha     | Juan Camilo |
 | [H6.2](H6.2-restaurar-demo.md)                  | Snapshot y "Restaurar demo"                                         | H6.1                                     | hecha     | Juan Camilo |
 | [H7.1](H7.1-carga-csv.md)                       | Carga masiva CSV con firma por lotes                                | H5.3                                     | pendiente |             |
-| [H7.2](H7.2-bitacora.md)                        | Bitácora de auditoría encadenada                                    | H3.2, H1.2                               | pendiente |             |
+| [H7.2](H7.2-bitacora.md)                        | Bitácora de auditoría encadenada                                    | H3.2, H1.2                               | en-curso  | Juan Camilo |
 | [H7.3](H7.3-exportar-cadena.md)                 | Exportar la cadena                                                  | H5.4                                     | hecha     | Juan Camilo |
 | [H8.1](H8.1-cli-verificador.md)                 | CLI verificador independiente                                       | H7.3                                     | hecha     | Juan Camilo |
 | [H8.2](H8.2-verificador-web.md)                 | Verificación local en el navegador                                  | H7.3, H9.1                               | pendiente |             |
