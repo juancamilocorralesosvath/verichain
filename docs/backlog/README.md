@@ -44,7 +44,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H7.1](H7.1-carga-csv.md)                       | Carga masiva CSV con firma por lotes                                | H5.3                                     | pendiente |             |
 | [H7.2](H7.2-bitacora.md)                        | Bitácora de auditoría encadenada                                    | H3.2, H1.2                               | pendiente |             |
 | [H7.3](H7.3-exportar-cadena.md)                 | Exportar la cadena                                                  | H5.4                                     | hecha     | Juan Camilo |
-| [H8.1](H8.1-cli-verificador.md)                 | CLI verificador independiente                                       | H7.3                                     | pendiente |             |
+| [H8.1](H8.1-cli-verificador.md)                 | CLI verificador independiente                                       | H7.3                                     | en-curso  | Juan Camilo |
 | [H8.2](H8.2-verificador-web.md)                 | Verificación local en el navegador                                  | H7.3, H9.1                               | pendiente |             |
 | [H9.1](H9.1-web-base.md)                        | Web base: React + Vite, login y layout por rol                      | H0.1                                     | hecha     | Codex       |
 | [H9.2](H9.2-paginas-personas-y-cadena.md)       | Páginas Personas y Cadena                                           | H9.1, H2.2                               | hecha     | Juan Camilo |
