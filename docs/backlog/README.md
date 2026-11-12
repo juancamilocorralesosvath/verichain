@@ -8,7 +8,6 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 
-- **H4.2** Lo que ve cada rol (nuestra última de las 6).
 - **H7.1** Carga masiva CSV con firma por lotes.
 - **H8.2** Verificación local en el navegador (usa `parsearExportacion` y `aOpcionesVerificacion`).
 - **H9.3** Página Verificar y **H10.1** sistema visual.
@@ -33,7 +32,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H3.2](H3.2-guard-de-roles.md)                  | Control de acceso por roles                                         | H3.1, H2.3                               | hecha     | Codex       |
 | [H3.3](H3.3-gestion-de-usuarios.md)             | Gestión de usuarios (admin)                                         | H3.2                                     | hecha     | Juan Camilo |
 | [H4.1](H4.1-cifrado-aes.md)                     | Cifrado AES-256-GCM de dirección y teléfono                         | H2.2                                     | hecha     | Codex       |
-| [H4.2](H4.2-respuestas-por-rol.md)              | Lo que ve cada rol                                                  | H4.1, H3.2                               | en-curso  | Juan Camilo |
+| [H4.2](H4.2-respuestas-por-rol.md)              | Lo que ve cada rol                                                  | H4.1, H3.2                               | hecha     | Juan Camilo |
 | [H5.1](H5.1-llaves-en-navegador.md)             | Llaves del usuario en el navegador                                  | H9.1                                     | hecha     | Juan Camilo |
 | [H5.2](H5.2-registro-de-llaves.md)              | Registro, aprobación y rotación de llaves                           | H3.2                                     | hecha     | Juan Camilo |
 | [H5.3](H5.3-flujo-preparar-firmar-confirmar.md) | Bloques firmados: preparar → firmar → confirmar                     | H5.1, H5.2, H4.1, H9.2                   | hecha     | Juan Camilo |

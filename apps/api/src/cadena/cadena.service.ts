@@ -16,7 +16,7 @@ import { Cola } from '../comun/cola.js';
 import { dificultadPow } from '../comun/config.js';
 import { LlavesService } from '../llaves/llaves.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { CifradoService } from '../cripto/cifrado.service.js';
+import { CifradoService, ErrorDatoCorrupto } from '../cripto/cifrado.service.js';
 import { FirmaServidorService } from '../cripto/firma-servidor.service.js';
 import { verificarFirmaNode } from '../cripto/verificador-firma.node.js';
 import type { Prisma } from '../generated/prisma/client.js';
@@ -251,7 +251,52 @@ export class CadenaService implements OnModuleInit {
     return this.prisma.bloque.findMany({ orderBy: { indice: 'asc' } });
   }
 
-  listarPersonas() {
-    return this.prisma.persona.findMany({ orderBy: { id: 'asc' } });
+  /**
+   * Personas según el rol (diseño §7b): el registrador ve dirección y teléfono descifrados; el
+   * auditor ve `***` más los textos cifrados. Si el descifrado AES-GCM falla (texto alterado) ese
+   * campo va `null` y `integra: false`; nunca es un 500. No se envía la llave ni el IV por separado.
+   */
+  async listarPersonasVisibles(rol: string) {
+    const filas = await this.prisma.persona.findMany({ orderBy: { id: 'asc' } });
+    return filas.map((p) => {
+      const direccion = this.descifrarOnull(p.direccion_cifrada);
+      const telefono = this.descifrarOnull(p.telefono_cifrado);
+      const integra = direccion !== null && telefono !== null;
+      if (rol === 'registrador') {
+        return {
+          id: p.id,
+          cedula: p.cedula,
+          nombre: p.nombre,
+          direccion,
+          telefono,
+          creado_en: p.creado_en,
+          creado_por: p.creado_por,
+          integra,
+        };
+      }
+      // auditor: verifica integridad sin ver datos personales (lo corrupto se ve como null, no como ***)
+      return {
+        id: p.id,
+        cedula: p.cedula,
+        nombre: p.nombre,
+        direccion: direccion === null ? null : '***',
+        telefono: telefono === null ? null : '***',
+        direccion_cifrada: p.direccion_cifrada,
+        telefono_cifrado: p.telefono_cifrado,
+        creado_en: p.creado_en,
+        creado_por: p.creado_por,
+        integra,
+      };
+    });
+  }
+
+  /** Descifra un campo; si el tag GCM no pasa, devuelve null en vez de lanzar. */
+  private descifrarOnull(valor: string): string | null {
+    try {
+      return this.cifrado.descifrar(valor);
+    } catch (error) {
+      if (error instanceof ErrorDatoCorrupto) return null;
+      throw error;
+    }
   }
 }
