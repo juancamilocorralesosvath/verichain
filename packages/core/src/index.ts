@@ -17,6 +17,12 @@ export type {
   VerificadorFirma,
 } from './tipos.js';
 export { verificarCadena } from './verificar.js';
+export {
+  FORMATO_EXPORTACION,
+  aOpcionesVerificacion,
+  parsearExportacion,
+  type Exportacion,
+} from './exportacion.js';
 export { serializarPersona } from './canonico.js';
 export { sha256Hex, calcularHashDatos, calcularHashCadena } from './hash.js';
 export { cumpleDificultad, minar, type ResultadoMinado } from './pow.js';
