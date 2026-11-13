@@ -6,6 +6,8 @@ import { App } from '../src/App';
 export interface Respuesta {
   status?: number;
   cuerpo: unknown;
+  /** Cabeceras de la respuesta (p. ej. Content-Disposition en las descargas). */
+  headers?: Record<string, string>;
 }
 type Manejador = Respuesta | (() => Respuesta | Promise<Respuesta>);
 
@@ -13,7 +15,11 @@ type Manejador = Respuesta | (() => Respuesta | Promise<Respuesta>);
 export function simularApi(rutas: Record<string, Manejador>) {
   const mock = vi.fn(async (url: string, opciones: RequestInit = {}) => {
     const manejador = rutas[`${opciones.method ?? 'GET'} ${url}`];
-    const { status = 200, cuerpo } = manejador
+    const {
+      status = 200,
+      cuerpo,
+      headers = {},
+    } = manejador
       ? typeof manejador === 'function'
         ? await manejador()
         : manejador
@@ -21,6 +27,7 @@ export function simularApi(rutas: Record<string, Manejador>) {
     return {
       ok: status >= 200 && status < 300,
       status,
+      headers: { get: (nombre: string) => headers[nombre] ?? null },
       text: async () => JSON.stringify(cuerpo),
       json: async () => cuerpo,
     };
