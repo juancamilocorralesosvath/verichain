@@ -1,0 +1,63 @@
+# Verichain: API (NestJS) + web (nginx con TLS). Requisitos previos (ver README / infra/tls/README.md):
+#   bash infra/tls/generar-ca.sh            → secrets/tls/server.{crt,key}
+#   npm run llaves:servidor -w @bc/api      → apps/api/secrets/server-signing-key.pem
+#   cp .env.example .env  (y completar JWT_SECRET, DATA_KEY, ADMIN_PASSWORD)
+# Arranque: docker compose up --build -d
+# Admin inicial (una vez): docker compose exec api node dist/auth/ejecutar-seed.js
+# Limpieza total (borra la BD): docker compose down -v
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    # Sin `ports`: la API solo es alcanzable desde nginx, dentro de la red del compose.
+    expose:
+      - '3000'
+    environment:
+      NODE_ENV: production # la cookie de sesión lleva `secure`
+      PORT: '3000'
+      WEB_ORIGIN: https://localhost
+      DATABASE_URL: file:/data/blockchain.db
+      SERVER_SIGNING_KEY_PATH: /run/secrets/server-signing-key.pem
+      TRUST_PROXY: '1'
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      DATA_KEY: ${DATA_KEY:?Define DATA_KEY en .env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Define ADMIN_PASSWORD en .env}
+      POW_DIFFICULTY: ${POW_DIFFICULTY:-4}
+      DEMO_MODE: ${DEMO_MODE:-false}
+    volumes:
+      - api-data:/data
+      - ./apps/api/secrets/server-signing-key.pem:/run/secrets/server-signing-key.pem:ro
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/salud').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./secrets/tls/server.crt:/etc/nginx/tls/server.crt:ro
+      - ./secrets/tls/server.key:/etc/nginx/tls/server.key:ro
+
+volumes:
+  api-data:

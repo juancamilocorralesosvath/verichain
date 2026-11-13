@@ -1,0 +1,19 @@
+# Nada de secretos ni de artefactos locales en el contexto de build (la raíz del monorepo)
+**/node_modules
+**/dist
+**/coverage
+.git
+.env
+.env.*
+!.env.example
+secrets
+**/secrets
+*.pem
+*.key
+*.crt
+*.db
+*.db-journal
+**/data
+apps/api/src/generated
+docs
+Ciberseguridad 251.pdf
