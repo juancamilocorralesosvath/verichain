@@ -12,8 +12,11 @@ import { BitacoraService, type ContextoAuditoria } from '../bitacora/bitacora.se
 import { CadenaService } from '../cadena/cadena.service.js';
 import { verificarFirmaNode } from '../cripto/verificador-firma.node.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { CrearPersonaDto } from '../personas/dto/crear-persona.dto.js';
 import type { ConfirmarBloqueDto } from './dto/confirmar-bloque.dto.js';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { parse } from 'csv-parse/sync';
+import { CrearPersonaDto } from '../personas/dto/crear-persona.dto.js';
 
 const VIDA_DEL_BORRADOR_MS = 5 * 60_000;
 
@@ -31,6 +34,7 @@ export class BloquesService {
     username: string,
     datos: CrearPersonaDto,
     ctx: ContextoAuditoria,
+    auditar = true,
   ) {
     // limpieza de borradores vencidos
     await this.prisma.borrador.deleteMany({ where: { expira_en: { lt: new Date() } } });
@@ -46,13 +50,50 @@ export class BloquesService {
         expira_en: new Date(Date.now() + VIDA_DEL_BORRADOR_MS),
       },
     });
-    await this.bitacora.registrar({
+    if (auditar) await this.bitacora.registrar({
       ...ctx,
       accion: 'preparar_bloque',
       resultado: 'ok',
       detalle: `borrador ${borrador.id.slice(0, 8)}`,
     });
     return { borrador_id: borrador.id, hash_datos };
+  }
+
+  async prepararLote(usuarioId: number, username: string, archivo: Buffer, ctx: ContextoAuditoria) {
+    let filas: string[][];
+    try {
+      filas = parse(archivo, { bom: true, skip_empty_lines: true, relax_column_count: true, max_record_size: 4096 }) as string[][];
+    } catch { throw new BadRequestException('CSV inválido'); }
+    if (filas.length < 1 || filas.length > 501 || filas[0]?.join(',') !== 'cedula,nombre,direccion,telefono') throw new BadRequestException('CSV inválido');
+    const validas: { fila: number; borrador_id: string; hash_datos: string }[] = [];
+    const invalidas: { fila: number; errores: string[] }[] = [];
+    const cedulas = new Set<string>();
+    for (const [indice, campos] of filas.slice(1).entries()) {
+      const fila = indice + 2;
+      if (campos.length !== 4) { invalidas.push({ fila, errores: ['Número de columnas incorrecto'] }); continue; }
+      const dto = plainToInstance(CrearPersonaDto, { cedula: campos[0], nombre: campos[1], direccion: campos[2], telefono: campos[3] });
+      const errores = (await validate(dto)).flatMap((e) => Object.values(e.constraints ?? {}));
+      if (typeof dto.cedula === 'string') {
+        if (cedulas.has(dto.cedula) || await this.prisma.persona.findUnique({ where: { cedula: dto.cedula } })) errores.push('Cédula duplicada');
+        cedulas.add(dto.cedula);
+      }
+      if (errores.length) { invalidas.push({ fila, errores }); continue; }
+      validas.push({ fila, ...await this.preparar(usuarioId, username, dto, ctx, false) });
+    }
+    return { validas, invalidas };
+  }
+
+  confirmarLote(usuarioId: number, items: ConfirmarBloqueDto[], ctx: ContextoAuditoria) {
+    return this.cadena.serializar(async () => {
+      const anexadas: number[] = [];
+      let error: string | null = null;
+      for (const item of items) {
+        try { const bloque = await this.confirmarEnCola(usuarioId, item); anexadas.push(bloque.indice); }
+        catch (e) { error = e instanceof HttpException ? e.message : 'Error interno'; break; }
+      }
+      await this.bitacora.registrar({ ...ctx, accion: 'csv', resultado: error ? 'fallo' : 'ok', detalle: `bloques anexados: ${anexadas.length}` });
+      return { anexadas, error };
+    });
   }
 
   /**
