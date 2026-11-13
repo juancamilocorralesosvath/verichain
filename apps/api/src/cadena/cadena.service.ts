@@ -137,6 +137,10 @@ export class CadenaService implements OnModuleInit {
       persona_id: persona.id,
       hash_datos: bloque.hash_datos,
       hash_cadena: bloque.hash_cadena,
+      // datos del minado para que la interfaz los muestre (H10.2)
+      nonce: bloque.nonce,
+      intentos: minado.intentos,
+      ms: Math.round(minado.ms),
     };
   }
 
