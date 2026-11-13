@@ -6,6 +6,7 @@ import { listarPersonas, type PersonaApi } from '../api/personas';
 import { leerPar } from '../cripto/almacen';
 import { exportarPublicaSpkiB64, firmarHashDatos, type ParLlaves } from '../cripto/llaves';
 import { useSesion } from '../sesion';
+import { Alerta, Boton, Campo as CampoUi, Tabla, Tarjeta } from '../ui';
 import { validarPersona, type Campo, type ValoresPersona } from '../validacion';
 
 const vacio: ValoresPersona = { cedula: '', nombre: '', direccion: '', telefono: '' };
@@ -41,10 +42,10 @@ function MensajeLlave({ llave }: { llave: EstadoLlave }) {
           ? 'Tu llave está pendiente de aprobación por un administrador.'
           : `Tu llave no puede firmar (estado: ${llave.tipo === 'no-aprobada' ? llave.estado : ''}).`;
   return (
-    <section aria-label="Llave requerida">
+    <Tarjeta aria-label="Llave requerida">
       <p>{texto}</p>
       <Link to="/mi-llave">Ir a Mi llave</Link>
-    </section>
+    </Tarjeta>
   );
 }
 
@@ -107,16 +108,12 @@ export function Personas() {
   const dato = (valor: string | null | undefined): string =>
     !esRegistrador || valor === undefined ? '***' : (valor ?? '—');
   const campo = (nombre: Campo, etiqueta: string) => (
-    <div>
-      <label>
-        {etiqueta}{' '}
-        <input
-          value={valores[nombre]}
-          onChange={(e) => setValores({ ...valores, [nombre]: e.target.value })}
-        />
-      </label>
-      {errores[nombre] && <span role="alert">{errores[nombre]}</span>}
-    </div>
+    <CampoUi
+      etiqueta={etiqueta}
+      error={errores[nombre]}
+      value={valores[nombre]}
+      onChange={(e) => setValores({ ...valores, [nombre]: e.target.value })}
+    />
   );
 
   return (
@@ -124,30 +121,32 @@ export function Personas() {
       <h1>Personas</h1>
       {esRegistrador && llave.tipo === 'cargando' && <p>Comprobando tu llave…</p>}
       {esRegistrador && llave.tipo === 'error' && (
-        <p role="alert">No fue posible comprobar tu llave: {llave.mensaje}</p>
+        <Alerta>No fue posible comprobar tu llave: {llave.mensaje}</Alerta>
       )}
       {esRegistrador &&
         (llave.tipo === 'sin-llave-local' ||
           llave.tipo === 'no-registrada' ||
           llave.tipo === 'no-aprobada') && <MensajeLlave llave={llave} />}
       {esRegistrador && llave.tipo === 'aprobada' && (
-        <form onSubmit={(e) => void enviar(e)} noValidate aria-label="Crear persona">
-          {campo('cedula', 'Cédula')}
-          {campo('nombre', 'Nombre')}
-          {campo('direccion', 'Dirección')}
-          {campo('telefono', 'Teléfono')}
-          <button disabled={enviando}>Crear persona</button>
-          {errorServidor && <p role="alert">{errorServidor}</p>}
-        </form>
+        <Tarjeta aria-label="Nueva persona">
+          <form onSubmit={(e) => void enviar(e)} noValidate aria-label="Crear persona">
+            {campo('cedula', 'Cédula')}
+            {campo('nombre', 'Nombre')}
+            {campo('direccion', 'Dirección')}
+            {campo('telefono', 'Teléfono')}
+            <Boton disabled={enviando}>Crear persona</Boton>
+            {errorServidor && <Alerta>{errorServidor}</Alerta>}
+          </form>
+        </Tarjeta>
       )}
       {error ? (
-        <p role="alert">{error}</p>
+        <Alerta>{error}</Alerta>
       ) : personas === null ? (
         <p>Cargando personas…</p>
       ) : personas.length === 0 ? (
         <p>No hay personas registradas.</p>
       ) : (
-        <table>
+        <Tabla etiqueta="Personas registradas">
           <thead>
             <tr>
               <th>Cédula</th>
@@ -172,7 +171,7 @@ export function Personas() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Tabla>
       )}
     </main>
   );

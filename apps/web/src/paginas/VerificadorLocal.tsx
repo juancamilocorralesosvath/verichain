@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ReporteVerificacion } from '../componentes/ReporteVerificacion';
+import { Alerta, Boton, Tarjeta } from '../ui';
 import { verificarLocal, type ResultadoLocal } from '../verificacion-local';
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -37,28 +38,30 @@ export function VerificadorLocal() {
         Verifica la cadena exportada aquí mismo, en tu navegador: los archivos no se envían a ningún
         servidor. No hace falta confiar en el servidor para comprobar la integridad.
       </p>
-      <label>
-        Archivo de la cadena (cadena.json){' '}
-        <input
-          type="file"
-          accept=".json,application/json"
-          onChange={(e) => setCadena(e.target.files?.[0] ?? null)}
-        />
-      </label>
-      <label>
-        Llave pública del servidor (server-public.pem){' '}
-        <input
-          type="file"
-          accept=".pem,text/plain"
-          onChange={(e) => setLlave(e.target.files?.[0] ?? null)}
-        />
-      </label>
-      <button onClick={() => void verificar()} disabled={!cadena || !llave || verificando}>
-        Verificar localmente
-      </button>
+      <Tarjeta aria-label="Archivos a verificar">
+        <label>
+          Archivo de la cadena (cadena.json){' '}
+          <input
+            type="file"
+            accept=".json,application/json"
+            onChange={(e) => setCadena(e.target.files?.[0] ?? null)}
+          />
+        </label>
+        <label>
+          Llave pública del servidor (server-public.pem){' '}
+          <input
+            type="file"
+            accept=".pem,text/plain"
+            onChange={(e) => setLlave(e.target.files?.[0] ?? null)}
+          />
+        </label>
+        <Boton onClick={() => void verificar()} disabled={!cadena || !llave || verificando}>
+          Verificar localmente
+        </Boton>
+      </Tarjeta>
       {verificando && <p>Verificando…</p>}
-      {error && <p role="alert">{error}</p>}
-      {resultado?.advertenciaHuella && <p role="alert">{resultado.advertenciaHuella}</p>}
+      {error && <Alerta>{error}</Alerta>}
+      {resultado?.advertenciaHuella && <Alerta tipo="aviso">{resultado.advertenciaHuella}</Alerta>}
       {resultado && (
         <>
           <p>

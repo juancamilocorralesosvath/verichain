@@ -3,11 +3,9 @@ import { listarCadena, type BloqueApi } from '../api/cadena';
 import { listarPersonas } from '../api/personas';
 import { useSesion } from '../sesion';
 
-/** Primeros 8 y últimos 4 caracteres; el hash completo va en el tooltip. */
-export const abreviarHash = (hash: string): string =>
-  hash.length > 12 ? `${hash.slice(0, 8)}…${hash.slice(-4)}` : hash;
+import { Alerta, Hash, Tabla } from '../ui';
 
-const Hash = ({ valor }: { valor: string }) => <span title={valor}>{abreviarHash(valor)}</span>;
+export { abreviarHash } from '../ui';
 
 export function Cadena() {
   const { usuario } = useSesion();
@@ -36,13 +34,13 @@ export function Cadena() {
     <main>
       <h1>Cadena</h1>
       {error ? (
-        <p role="alert">{error}</p>
+        <Alerta>{error}</Alerta>
       ) : bloques === null ? (
         <p>Cargando la cadena…</p>
       ) : bloques.length === 0 ? (
         <p>No hay bloques.</p>
       ) : (
-        <table>
+        <Tabla etiqueta="Bloques de la cadena">
           <thead>
             <tr>
               <th>Índice</th>
@@ -85,7 +83,7 @@ export function Cadena() {
                 </tr>
               ))}
           </tbody>
-        </table>
+        </Tabla>
       )}
     </main>
   );
