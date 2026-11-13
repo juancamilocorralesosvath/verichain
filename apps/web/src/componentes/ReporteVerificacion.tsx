@@ -1,4 +1,5 @@
-import type { EstadoChequeo, ReporteBloque, ReporteCadena } from '@bc/core';
+import type { ReporteBloque, ReporteCadena } from '@bc/core';
+import { Insignia, Tarjeta } from '../ui';
 
 const ETIQUETAS: { clave: keyof ReporteBloque['chequeos']; nombre: string }[] = [
   { clave: 'hashDatos', nombre: 'Hash de datos' },
@@ -7,16 +8,6 @@ const ETIQUETAS: { clave: keyof ReporteBloque['chequeos']; nombre: string }[] = 
   { clave: 'pow', nombre: 'Prueba de trabajo' },
   { clave: 'firmaUsuario', nombre: 'Firma del usuario' },
 ];
-
-const TEXTO_ESTADO: Record<EstadoChequeo, string> = {
-  ok: '✅ ok',
-  falla: '❌ falla',
-  'no-aplica': '➖ no aplica',
-};
-
-const Estado = ({ estado }: { estado: EstadoChequeo }) => (
-  <span data-estado={estado}>{TEXTO_ESTADO[estado]}</span>
-);
 
 /**
  * Muestra un `ReporteCadena`. No hace `fetch`: lo reutilizan la página Verificar,
@@ -29,7 +20,8 @@ export function ReporteVerificacion({ reporte }: { reporte: ReporteCadena }) {
       <div role="status" data-valida={reporte.valida} className="veredicto">
         <h2>{reporte.valida ? '✅ Cadena íntegra' : '❌ Cadena comprometida'}</h2>
         <p>
-          {reporte.totalBloques} {reporte.totalBloques === 1 ? 'bloque' : 'bloques'} revisados.
+          {reporte.totalBloques}{' '}
+          {reporte.totalBloques === 1 ? 'bloque revisado' : 'bloques revisados'}.
         </p>
         {roto !== null && (
           <p>
@@ -41,10 +33,10 @@ export function ReporteVerificacion({ reporte }: { reporte: ReporteCadena }) {
         )}
       </div>
 
-      <section aria-label="Sello del servidor" data-estado={reporte.sello.estado}>
+      <Tarjeta aria-label="Sello del servidor" data-estado={reporte.sello.estado}>
         <h3>Sello del servidor</h3>
         <p>
-          <Estado estado={reporte.sello.estado} />
+          <Insignia estado={reporte.sello.estado} />
         </p>
         {reporte.sello.motivos.length > 0 && (
           <ul>
@@ -53,40 +45,43 @@ export function ReporteVerificacion({ reporte }: { reporte: ReporteCadena }) {
             ))}
           </ul>
         )}
-      </section>
+      </Tarjeta>
 
       <h3>Bloques</h3>
-      {reporte.bloques.map((b) => {
-        const esRoto = b.indice === roto;
-        return (
-          <article
-            key={b.indice}
-            id={`bloque-${b.indice}`}
-            data-bloque={b.indice}
-            data-roto={esRoto ? 'true' : undefined}
-            aria-label={`Bloque ${b.indice}`}
-          >
-            <h4>
-              Bloque {b.indice}
-              {esRoto && ' — primer bloque roto'}
-            </h4>
-            <ul>
-              {ETIQUETAS.map(({ clave, nombre }) => (
-                <li key={clave}>
-                  {nombre}: <Estado estado={b.chequeos[clave]} />
-                </li>
-              ))}
-            </ul>
-            {b.motivos.length > 0 && (
+      <div className="reporte-bloques">
+        {reporte.bloques.map((b) => {
+          const esRoto = b.indice === roto;
+          return (
+            <article
+              className="bloque-reporte"
+              key={b.indice}
+              id={`bloque-${b.indice}`}
+              data-bloque={b.indice}
+              data-roto={esRoto ? 'true' : undefined}
+              aria-label={`Bloque ${b.indice}`}
+            >
+              <h4>
+                Bloque {b.indice}
+                {esRoto && ' — primer bloque roto'}
+              </h4>
               <ul>
-                {b.motivos.map((m) => (
-                  <li key={m}>{m}</li>
+                {ETIQUETAS.map(({ clave, nombre }) => (
+                  <li key={clave}>
+                    {nombre}: <Insignia estado={b.chequeos[clave]} />
+                  </li>
                 ))}
               </ul>
-            )}
-          </article>
-        );
-      })}
+              {b.motivos.length > 0 && (
+                <ul>
+                  {b.motivos.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              )}
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }

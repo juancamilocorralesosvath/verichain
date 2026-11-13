@@ -12,6 +12,7 @@ import {
   type ParLlaves,
 } from '../cripto/llaves';
 import { useSesion } from '../sesion';
+import { Alerta, Boton, Tarjeta } from '../ui';
 
 const mensajeDe = (e: unknown): string =>
   e instanceof ErrorRespaldo || e instanceof ErrorApi
@@ -167,24 +168,24 @@ export function MiLlave() {
       {cargando ? (
         <p>Cargando tu llave…</p>
       ) : par ? (
-        <section aria-label="Llave actual">
+        <Tarjeta aria-label="Llave actual">
           <p>Llave pública (SPKI, base64):</p>
           <code>{spki}</code>
           <p>Huella SHA-256: {huella}</p>
           <p>Estado en el servidor: {textoEstado[servidor] ?? ''}</p>
           {servidor === 'no-registrada' && (
-            <button onClick={() => void registrar()}>Registrar en el servidor</button>
+            <Boton onClick={() => void registrar()}>Registrar en el servidor</Boton>
           )}
-        </section>
+        </Tarjeta>
       ) : (
-        <section aria-label="Sin llave">
+        <Tarjeta aria-label="Sin llave">
           <p>Este navegador no tiene una llave para {username}.</p>
-          <button onClick={() => void generar()}>Generar llave</button>
-        </section>
+          <Boton onClick={() => void generar()}>Generar llave</Boton>
+        </Tarjeta>
       )}
 
       {par && (
-        <section aria-label="Respaldo">
+        <Tarjeta aria-label="Respaldo">
           <h2>Respaldo cifrado</h2>
           <label>
             Contraseña para el respaldo{' '}
@@ -194,11 +195,11 @@ export function MiLlave() {
               onChange={(e) => setPasswordRespaldo(e.target.value)}
             />
           </label>
-          <button onClick={() => void descargar()}>Descargar respaldo</button>
-        </section>
+          <Boton onClick={() => void descargar()}>Descargar respaldo</Boton>
+        </Tarjeta>
       )}
 
-      <section aria-label="Importar">
+      <Tarjeta aria-label="Importar">
         <h2>Importar un respaldo</h2>
         <label>
           Archivo de respaldo{' '}
@@ -216,11 +217,11 @@ export function MiLlave() {
             onChange={(e) => setPasswordImportar(e.target.value)}
           />
         </label>
-        <button onClick={() => void importar()}>Importar respaldo</button>
-      </section>
+        <Boton onClick={() => void importar()}>Importar respaldo</Boton>
+      </Tarjeta>
 
-      {error && <p role="alert">{error}</p>}
-      {aviso && <p role="status">{aviso}</p>}
+      {error && <Alerta>{error}</Alerta>}
+      {aviso && <Alerta tipo="info">{aviso}</Alerta>}
     </main>
   );
 }

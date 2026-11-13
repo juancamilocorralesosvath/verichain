@@ -1,10 +1,11 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 import { Cadena } from './paginas/Cadena';
 import { MiLlave } from './paginas/MiLlave';
 import { Personas } from './paginas/Personas';
 import { Verificar } from './paginas/Verificar';
 import { VerificadorLocal } from './paginas/VerificadorLocal';
+import { Alerta, Boton, Campo, Tarjeta } from './ui';
 import { SesionProvider, useSesion, type Rol } from './sesion';
 
 const paginas: Record<string, ReactNode> = {
@@ -45,22 +46,25 @@ function Login() {
   return (
     <main>
       <h1>Iniciar sesión</h1>
-      <form onSubmit={enviar}>
-        <label>
-          Usuario <input required value={username} onChange={(e) => setUsername(e.target.value)} />
-        </label>
-        <label>
-          Contraseña{' '}
-          <input
+      <Tarjeta aria-label="Acceso">
+        <form onSubmit={enviar}>
+          <Campo
+            etiqueta="Usuario"
+            required
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <Campo
+            etiqueta="Contraseña"
             required
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </label>
-        <button>Entrar</button>
-        {error && <p role="alert">{error}</p>}
-      </form>
+          <Boton>Entrar</Boton>
+          {error && <Alerta>{error}</Alerta>}
+        </form>
+      </Tarjeta>
     </main>
   );
 }
@@ -87,18 +91,20 @@ function Contenido() {
             enlaces
               .filter((e) => e.roles.includes(usuario.rol))
               .map((e) => (
-                <Link key={e.ruta} to={e.ruta}>
+                <NavLink key={e.ruta} to={e.ruta}>
                   {e.titulo}
-                </Link>
+                </NavLink>
               ))}
-          <Link to="/verificador">Verificador independiente</Link>
+          <NavLink to="/verificador">Verificador independiente</NavLink>
         </nav>
         {usuario && (
           <>
             <span>
               {usuario.username} ({usuario.rol})
             </span>
-            <button onClick={() => void salir()}>Cerrar sesión</button>
+            <Boton variante="secundario" onClick={() => void salir()}>
+              Cerrar sesión
+            </Boton>
           </>
         )}
       </header>

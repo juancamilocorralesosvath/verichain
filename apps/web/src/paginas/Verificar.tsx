@@ -2,6 +2,7 @@ import type { ReporteCadena } from '@bc/core';
 import { useState } from 'react';
 import { verificarCadena } from '../api/cadena';
 import { ReporteVerificacion } from '../componentes/ReporteVerificacion';
+import { Alerta, Boton } from '../ui';
 
 export function Verificar() {
   const [reporte, setReporte] = useState<ReporteCadena | null>(null);
@@ -24,11 +25,11 @@ export function Verificar() {
   return (
     <main>
       <h1>Verificar</h1>
-      <button onClick={() => void verificar()} disabled={cargando}>
+      <Boton onClick={() => void verificar()} disabled={cargando}>
         Verificar integridad
-      </button>
+      </Boton>
       {cargando && <p>Verificando la cadena…</p>}
-      {error && <p role="alert">{error}</p>}
+      {error && <Alerta>{error}</Alerta>}
       {reporte ? (
         <ReporteVerificacion reporte={reporte} />
       ) : (
