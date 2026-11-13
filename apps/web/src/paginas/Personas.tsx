@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { confirmarBloque, prepararBloque } from '../api/bloques';
+import { confirmarBloque, prepararBloque, type ResultadoConfirmar } from '../api/bloques';
 import { misLlaves } from '../api/llaves';
 import { listarPersonas, type PersonaApi } from '../api/personas';
 import { leerPar } from '../cripto/almacen';
@@ -58,6 +58,8 @@ export function Personas() {
   const [errores, setErrores] = useState<Partial<Record<Campo, string>>>({});
   const [errorServidor, setErrorServidor] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [minando, setMinando] = useState(false);
+  const [anexado, setAnexado] = useState<ResultadoConfirmar | null>(null);
   const [llave, setLlave] = useState<EstadoLlave>({ tipo: 'cargando' });
 
   const cargar = useCallback(async () => {
@@ -86,6 +88,7 @@ export function Personas() {
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
     setErrorServidor('');
+    setAnexado(null);
     const resultado = validarPersona(valores);
     setErrores(resultado.errores);
     if (!resultado.valido || llave.tipo !== 'aprobada') return; // la validación real es la del servidor
@@ -94,12 +97,14 @@ export function Personas() {
       // preparar → firmar (con la llave de este navegador) → confirmar
       const { borrador_id, hash_datos } = await prepararBloque(resultado.normalizado);
       const firma_b64 = await firmarHashDatos(llave.par.privada, hash_datos);
-      await confirmarBloque({ borrador_id, llave_id: llave.llaveId, firma_b64 });
+      setMinando(true);
+      setAnexado(await confirmarBloque({ borrador_id, llave_id: llave.llaveId, firma_b64 }));
       setValores(vacio);
       await cargar();
     } catch (e) {
       setErrorServidor(mensajeDe(e));
     } finally {
+      setMinando(false);
       setEnviando(false);
     }
   }
@@ -136,6 +141,15 @@ export function Personas() {
             {campo('telefono', 'Teléfono')}
             <Boton disabled={enviando}>Crear persona</Boton>
             {errorServidor && <Alerta>{errorServidor}</Alerta>}
+            {minando && <Alerta tipo="info">Minando el bloque… (buscando el nonce)</Alerta>}
+            {anexado && (
+              <Alerta tipo="info">
+                {`Bloque ${anexado.indice ?? ''} anexado`.replace('  ', ' ')}
+                {anexado.nonce !== undefined &&
+                  `: nonce ${anexado.nonce}, ${anexado.intentos ?? '?'} intentos, ${anexado.ms ?? '?'} ms`}
+                .
+              </Alerta>
+            )}
           </form>
         </Tarjeta>
       )}

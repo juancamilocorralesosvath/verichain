@@ -448,3 +448,96 @@ section > label {
     transition: none !important;
   }
 }
+
+/* --- Cadena como bloques conectados (H10.2) --- */
+.cadena-scroll {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: var(--e3);
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-grande);
+}
+.cadena {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 44rem;
+}
+.bloque {
+  background: var(--superficie);
+  border: 2px solid var(--linea);
+  border-left: 8px solid var(--tinta-suave);
+  border-radius: var(--radio-grande);
+  padding: var(--e3) var(--e4);
+}
+.bloque[data-genesis='true'] {
+  border-left-color: var(--sello);
+}
+.bloque[data-estado='ok'] {
+  border-color: var(--ok);
+  background: var(--ok-fondo);
+}
+.bloque[data-estado='falla'] {
+  border-color: var(--falla);
+  background: var(--falla-fondo);
+}
+.bloque header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e2);
+}
+.bloque h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+.bloque dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--e1) var(--e4);
+  margin: var(--e3) 0 0;
+}
+.bloque dt {
+  color: var(--tinta-suave);
+}
+.bloque dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.conexion {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  margin: 0 var(--e5);
+  padding: var(--e1) 0 var(--e1) var(--e3);
+  border-left: 4px dashed var(--tinta-suave);
+  min-height: 2.75rem;
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+.conexion > span:first-child {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.conexion[data-afectada='true'] {
+  border-left-color: var(--falla);
+  color: var(--falla);
+}
+.conexion[data-roto='true'] {
+  border-left: 6px solid var(--falla);
+  color: var(--falla);
+  font-weight: 700;
+}
+@media (max-width: 40rem) {
+  .bloque dl {
+    grid-template-columns: 1fr;
+  }
+  .bloque dd {
+    margin-bottom: var(--e2);
+  }
+  .conexion {
+    margin: 0 var(--e2);
+  }
+}

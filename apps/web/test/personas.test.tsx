@@ -247,6 +247,39 @@ describe('Personas: formulario firmado (preparar → firmar → confirmar)', () 
     expect(llamadas(mock, 'POST', '/api/bloques/confirmar')).toHaveLength(0);
   });
 
+  it('muestra "Minando…" mientras confirma y después el nonce, los intentos y el tiempo', async () => {
+    let terminar: (() => void) | undefined;
+    await montar({
+      'POST /api/bloques/confirmar': () =>
+        new Promise((resolver) => {
+          terminar = () =>
+            resolver({
+              status: 201,
+              cuerpo: { indice: 5, nonce: 4242, intentos: 4243, ms: 87 },
+            });
+        }),
+    });
+    const usuario = userEvent.setup();
+    await llenar(usuario, validos);
+    await usuario.click(screen.getByRole('button', { name: 'Crear persona' }));
+    expect((await screen.findByRole('status')).textContent).toMatch(/minando/i);
+    await waitFor(() => expect(terminar).toBeDefined());
+    terminar?.();
+    const resumen = await screen.findByText(/bloque 5 anexado/i);
+    expect(resumen.textContent).toMatch(/nonce 4242/i);
+    expect(resumen.textContent).toMatch(/4243 intentos/i);
+    expect(resumen.textContent).toMatch(/87 ms/i);
+    expect(screen.queryByText(/minando/i)).toBeNull();
+  });
+
+  it('si la respuesta no trae datos de minado, igual confirma el anexo', async () => {
+    await montar();
+    const usuario = userEvent.setup();
+    await llenar(usuario, validos);
+    await usuario.click(screen.getByRole('button', { name: 'Crear persona' }));
+    expect(await screen.findByText(/bloque 1 anexado/i)).toBeTruthy();
+  });
+
   it.each([
     [410, 'El borrador expiró'],
     [400, 'Firma inválida'],

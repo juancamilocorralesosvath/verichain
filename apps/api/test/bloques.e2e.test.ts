@@ -66,6 +66,12 @@ describe('Bloques firmados: preparar → firmar → confirmar', () => {
       firma_b64,
     }).expect(201);
     expect(res.body).toMatchObject({ indice: 1, hash_datos });
+    // H10.2: la interfaz muestra el minado (nonce, intentos y tiempo)
+    expect(res.body).toMatchObject({
+      nonce: expect.any(Number),
+      intentos: expect.any(Number),
+      ms: expect.any(Number),
+    });
 
     const persona = await prisma.persona.findUniqueOrThrow({
       where: { cedula: datos['cedula'] as string },
@@ -76,6 +82,7 @@ describe('Bloques firmados: preparar → firmar → confirmar', () => {
     expect(new CifradoService(process.env['DATA_KEY']).descifrar(persona.direccion_cifrada)).toBe(
       'Carrera 7 # 8-9',
     );
+    expect((res.body as { nonce: number }).nonce).toBe(bloque.nonce);
     expect(bloque).toMatchObject({
       hash_datos,
       llave_id: ana.llaveId,
