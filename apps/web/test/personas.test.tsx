@@ -294,3 +294,139 @@ describe('Personas: formulario firmado (preparar → firmar → confirmar)', () 
     expect(await screen.findByText(mensaje)).toBeTruthy();
   });
 });
+
+describe('Personas: carga masiva CSV (H7.1)', () => {
+  const H1 = 'a1'.repeat(32);
+  const H2 = 'b2'.repeat(32);
+  const lote = {
+    validas: [
+      { fila: 2, borrador_id: 'bor-1', hash_datos: H1 },
+      { fila: 3, borrador_id: 'bor-2', hash_datos: H2 },
+    ],
+    invalidas: [{ fila: 4, errores: ['cedula debe tener entre 6 y 10 dígitos'] }],
+  };
+  const csv = (nombre = 'personas.csv', tipo = 'text/csv', contenido = 'cedula,nombre\n') =>
+    new File([contenido], nombre, { type: tipo });
+
+  async function montar(extra: Record<string, unknown> = {}, estado: string | null = 'aprobada') {
+    const { par, mias } = await llaveLocal(estado);
+    const mock = simularApi({
+      ...sesion('registrador'),
+      'GET /api/personas': { cuerpo: [] },
+      'GET /api/llaves/mias': { cuerpo: mias },
+      'POST /api/bloques/preparar-lote': { status: 201, cuerpo: lote },
+      'POST /api/bloques/confirmar-lote': {
+        status: 201,
+        cuerpo: { anexadas: [1, 2], error: null },
+      },
+      ...extra,
+    });
+    renderizar('/personas');
+    return { par, mock };
+  }
+  const subir = async (usuario: ReturnType<typeof userEvent.setup>, archivo = csv()) => {
+    await usuario.upload(await screen.findByLabelText(/archivo csv/i), archivo);
+    await usuario.click(screen.getByRole('button', { name: /subir y validar/i }));
+  };
+
+  it('el registrador sin llave aprobada no ve la carga masiva', async () => {
+    await montar({}, 'pendiente');
+    await screen.findByText(/pendiente de aprobación/i);
+    expect(screen.queryByLabelText(/archivo csv/i)).toBeNull();
+  });
+
+  it('el auditor no ve la carga masiva', async () => {
+    simularApi({ ...sesion('auditor'), 'GET /api/personas': { cuerpo: [] } });
+    renderizar('/personas');
+    await screen.findByText(/no hay personas/i);
+    expect(screen.queryByLabelText(/archivo csv/i)).toBeNull();
+  });
+
+  it('sube el CSV como multipart y muestra válidas e inválidas con sus errores', async () => {
+    const { mock } = await montar();
+    const usuario = userEvent.setup();
+    await subir(usuario);
+    expect(await screen.findByText(/2 válidas y 1 inválida/i)).toBeTruthy();
+    const alertaFila = screen.getByRole('row', { name: /4.*cedula debe tener/i });
+    expect(alertaFila).toBeTruthy();
+    const [, opciones] = llamadas(mock, 'POST', '/api/bloques/preparar-lote')[0] as [
+      string,
+      RequestInit,
+    ];
+    expect(opciones.body).toBeInstanceOf(FormData);
+    expect((opciones.body as FormData).get('archivo')).toBeInstanceOf(File);
+    // con FormData no se fuerza application/json
+    expect(JSON.stringify(opciones.headers ?? {})).not.toMatch(/application\/json/);
+  });
+
+  it('"Firmar y anexar 2" firma todos los hash_datos con la llave local y confirma en orden', async () => {
+    const { par, mock } = await montar();
+    const usuario = userEvent.setup();
+    await subir(usuario);
+    await usuario.click(await screen.findByRole('button', { name: 'Firmar y anexar 2' }));
+    expect(await screen.findByText(/se anexaron 2 de 2/i)).toBeTruthy();
+    const [, opciones] = llamadas(mock, 'POST', '/api/bloques/confirmar-lote')[0] as [
+      string,
+      RequestInit,
+    ];
+    const { items } = JSON.parse(opciones.body as string) as {
+      items: { borrador_id: string; llave_id: number; firma_b64: string }[];
+    };
+    expect(items.map((i) => i.borrador_id)).toEqual(['bor-1', 'bor-2']);
+    expect(items.every((i) => i.llave_id === 7)).toBe(true);
+    expect(await verificarFirma(par.publica, H1, items[0]!.firma_b64)).toBe(true);
+    expect(await verificarFirma(par.publica, H2, items[1]!.firma_b64)).toBe(true);
+    // recarga la tabla y limpia el lote
+    await waitFor(() =>
+      expect(llamadas(mock, 'GET', '/api/personas').length).toBeGreaterThanOrEqual(2),
+    );
+    expect(screen.queryByRole('button', { name: /firmar y anexar/i })).toBeNull();
+  });
+
+  it('falla a mitad de lote: informa cuántas quedaron anexadas y el motivo', async () => {
+    await montar({
+      'POST /api/bloques/confirmar-lote': {
+        status: 201,
+        cuerpo: { anexadas: [1], error: 'Firma inválida' },
+      },
+    });
+    const usuario = userEvent.setup();
+    await subir(usuario);
+    await usuario.click(await screen.findByRole('button', { name: 'Firmar y anexar 2' }));
+    const alerta = await screen.findByText(/se anexaron 1 de 2/i);
+    expect(alerta.textContent).toMatch(/firma inválida/i);
+  });
+
+  it('un CSV sin filas válidas no ofrece firmar', async () => {
+    await montar({
+      'POST /api/bloques/preparar-lote': {
+        status: 201,
+        cuerpo: { validas: [], invalidas: lote.invalidas },
+      },
+    });
+    const usuario = userEvent.setup();
+    await subir(usuario);
+    expect(await screen.findByText(/0 válidas y 1 inválida/i)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /firmar y anexar/i })).toBeNull();
+  });
+
+  it('muestra el error del servidor (p. ej. encabezado incorrecto)', async () => {
+    await montar({
+      'POST /api/bloques/preparar-lote': {
+        status: 400,
+        cuerpo: { statusCode: 400, mensaje: 'CSV inválido' },
+      },
+    });
+    const usuario = userEvent.setup();
+    await subir(usuario);
+    expect((await screen.findByText('CSV inválido')).getAttribute('role')).toBe('alert');
+  });
+
+  it('rechaza en el navegador un archivo de más de 200 KB sin llamar al servidor', async () => {
+    const { mock } = await montar();
+    const usuario = userEvent.setup();
+    await subir(usuario, csv('grande.csv', 'text/csv', 'a'.repeat(201 * 1024)));
+    expect((await screen.findByRole('alert')).textContent).toMatch(/200 KB/);
+    expect(llamadas(mock, 'POST', '/api/bloques/preparar-lote')).toHaveLength(0);
+  });
+});

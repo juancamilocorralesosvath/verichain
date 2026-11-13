@@ -14,7 +14,11 @@ export async function solicitar<T>(
   const respuesta = await fetch(`/api${ruta}`, {
     ...opciones,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...opciones.headers },
+    // con FormData el navegador pone el Content-Type (multipart con su boundary)
+    headers: {
+      ...(opciones.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...opciones.headers,
+    },
   });
   if (!respuesta.ok) {
     if (respuesta.status === 401 && redirigir401)

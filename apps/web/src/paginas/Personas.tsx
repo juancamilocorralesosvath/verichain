@@ -5,6 +5,7 @@ import { misLlaves } from '../api/llaves';
 import { listarPersonas, type PersonaApi } from '../api/personas';
 import { leerPar } from '../cripto/almacen';
 import { exportarPublicaSpkiB64, firmarHashDatos, type ParLlaves } from '../cripto/llaves';
+import { CargaCsv } from '../componentes/CargaCsv';
 import { useSesion } from '../sesion';
 import { Alerta, Boton, Campo as CampoUi, Tabla, Tarjeta } from '../ui';
 import { validarPersona, type Campo, type ValoresPersona } from '../validacion';
@@ -133,25 +134,28 @@ export function Personas() {
           llave.tipo === 'no-registrada' ||
           llave.tipo === 'no-aprobada') && <MensajeLlave llave={llave} />}
       {esRegistrador && llave.tipo === 'aprobada' && (
-        <Tarjeta aria-label="Nueva persona">
-          <form onSubmit={(e) => void enviar(e)} noValidate aria-label="Crear persona">
-            {campo('cedula', 'Cédula')}
-            {campo('nombre', 'Nombre')}
-            {campo('direccion', 'Dirección')}
-            {campo('telefono', 'Teléfono')}
-            <Boton disabled={enviando}>Crear persona</Boton>
-            {errorServidor && <Alerta>{errorServidor}</Alerta>}
-            {minando && <Alerta tipo="info">Minando el bloque… (buscando el nonce)</Alerta>}
-            {anexado && (
-              <Alerta tipo="info">
-                {`Bloque ${anexado.indice ?? ''} anexado`.replace('  ', ' ')}
-                {anexado.nonce !== undefined &&
-                  `: nonce ${anexado.nonce}, ${anexado.intentos ?? '?'} intentos, ${anexado.ms ?? '?'} ms`}
-                .
-              </Alerta>
-            )}
-          </form>
-        </Tarjeta>
+        <>
+          <Tarjeta aria-label="Nueva persona">
+            <form onSubmit={(e) => void enviar(e)} noValidate aria-label="Crear persona">
+              {campo('cedula', 'Cédula')}
+              {campo('nombre', 'Nombre')}
+              {campo('direccion', 'Dirección')}
+              {campo('telefono', 'Teléfono')}
+              <Boton disabled={enviando}>Crear persona</Boton>
+              {errorServidor && <Alerta>{errorServidor}</Alerta>}
+              {minando && <Alerta tipo="info">Minando el bloque… (buscando el nonce)</Alerta>}
+              {anexado && (
+                <Alerta tipo="info">
+                  {`Bloque ${anexado.indice ?? ''} anexado`.replace('  ', ' ')}
+                  {anexado.nonce !== undefined &&
+                    `: nonce ${anexado.nonce}, ${anexado.intentos ?? '?'} intentos, ${anexado.ms ?? '?'} ms`}
+                  .
+                </Alerta>
+              )}
+            </form>
+          </Tarjeta>
+          <CargaCsv llaveId={llave.llaveId} privada={llave.par.privada} alAnexar={cargar} />
+        </>
       )}
       {error ? (
         <Alerta>{error}</Alerta>
