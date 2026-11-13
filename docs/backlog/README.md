@@ -63,7 +63,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H10.2](H10.2-vista-cadena-visual.md)           | Cadena como bloques conectados                                      | H10.1, H9.3                              | pendiente |             |
 | [H10.3](H10.3-pulido-y-modo-presentacion.md)    | Pulido y modo presentación                                          | H10.1, H9.4                              | pendiente |             |
 | [H11.1](H11.1-ca-propia-https.md)               | CA propia y certificado HTTPS                                       | H0.1                                     | hecha     | Codex       |
-| [H11.2](H11.2-docker-compose.md)                | Docker Compose con nginx TLS                                        | H11.1, H2.3                              | pendiente |             |
+| [H11.2](H11.2-docker-compose.md)                | Docker Compose con nginx TLS                                        | H11.1, H2.3                              | en-curso  | Alexis      |
 | [H12.1](H12.1-readme.md)                        | README del proyecto                                                 | H6.2, H8.1                               | pendiente |             |
 | [H12.2](H12.2-informe.md)                       | Informe final                                                       | (tras el congelamiento)                  | pendiente |             |
 | [H12.3](H12.3-guion-sustentacion.md)            | Guion de sustentación y ensayo                                      | H12.1                                    | pendiente |             |
