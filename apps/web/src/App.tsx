@@ -11,6 +11,7 @@ import { Usuarios } from './paginas/Usuarios';
 import { Verificar } from './paginas/Verificar';
 import { VerificadorLocal } from './paginas/VerificadorLocal';
 import { Alerta, Boton, Campo, Tarjeta } from './ui';
+import { InterruptorPresentacion, PresentacionProvider } from './presentacion';
 import { SesionProvider, useSesion, type Rol } from './sesion';
 
 const paginas: Record<string, ReactNode> = {
@@ -85,6 +86,7 @@ function Protegida({ roles, children }: { roles: Rol[]; children: ReactNode }) {
     return (
       <main>
         <h1>Sin permiso</h1>
+        <p>Tu rol no tiene acceso a esta página.</p>
       </main>
     );
   return children;
@@ -107,6 +109,7 @@ function Contenido() {
               ))}
           <NavLink to="/verificador">Verificador independiente</NavLink>
         </nav>
+        <InterruptorPresentacion />
         {usuario && (
           <>
             <span>
@@ -144,8 +147,10 @@ function Contenido() {
 }
 export function App() {
   return (
-    <SesionProvider>
-      <Contenido />
-    </SesionProvider>
+    <PresentacionProvider>
+      <SesionProvider>
+        <Contenido />
+      </SesionProvider>
+    </PresentacionProvider>
   );
 }

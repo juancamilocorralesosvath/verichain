@@ -542,3 +542,42 @@ section > label {
     margin: 0 var(--e2);
   }
 }
+
+/* --- Modo presentación (H10.3): tipografía grande para el proyector --- */
+html[data-presentacion='true'] {
+  font-size: 125%;
+}
+html[data-presentacion='true'] body {
+  line-height: 1.5;
+}
+html[data-presentacion='true'] h1 {
+  font-size: 2.3rem;
+}
+html[data-presentacion='true'] .hash-valor,
+html[data-presentacion='true'] code {
+  font-size: 1.05em;
+}
+html[data-presentacion='true'] .hash-copiar {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+}
+html[data-presentacion='true'] .veredicto h2 {
+  font-size: 2.6rem;
+}
+html[data-presentacion='true'] main {
+  max-width: 88rem;
+}
+html[data-presentacion='true'] .tabla {
+  font-size: 1rem;
+}
+html[data-presentacion='true'] .cadena {
+  max-width: 56rem;
+}
+.tarjeta-deteccion {
+  background: var(--aviso-fondo);
+  border-left-color: var(--aviso);
+  color: var(--tinta);
+}
+.tarjeta-deteccion h3 {
+  color: var(--aviso);
+}

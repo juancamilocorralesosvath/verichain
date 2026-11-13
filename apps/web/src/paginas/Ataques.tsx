@@ -10,6 +10,7 @@ import {
 import { verificarCadena } from '../api/cadena';
 import { ErrorApi } from '../api/cliente';
 import { ReporteVerificacion } from '../componentes/ReporteVerificacion';
+import { usePresentacion } from '../presentacion';
 import { Alerta, Boton, Campo, Tarjeta } from '../ui';
 
 const mensajeDe = (e: unknown): string =>
@@ -28,6 +29,7 @@ export function Ataques() {
   const [error, setError] = useState('');
   const [reporte, setReporte] = useState<ReporteCadena | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const { activo: presentacion } = usePresentacion();
 
   useEffect(() => {
     let activo = true;
@@ -130,9 +132,19 @@ export function Ataques() {
             <Tarjeta key={a.id} aria-label={a.nombre}>
               <h2>{a.nombre}</h2>
               <p>{a.descripcion}</p>
-              <p>
-                <strong>Debería detectarlo:</strong> {a.deteccionEsperada}
-              </p>
+              {presentacion ? (
+                <Tarjeta
+                  aria-label={`Qué se espera detectar: ${a.nombre}`}
+                  className="tarjeta-deteccion"
+                >
+                  <h3>Qué se espera detectar</h3>
+                  <p>{a.deteccionEsperada}</p>
+                </Tarjeta>
+              ) : (
+                <p>
+                  <strong>Debería detectarlo:</strong> {a.deteccionEsperada}
+                </p>
+              )}
               <Boton
                 variante="peligro"
                 aria-label={`Ejecutar ataque: ${a.nombre}`}
