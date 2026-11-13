@@ -4,6 +4,7 @@ import { Cadena } from './paginas/Cadena';
 import { MiLlave } from './paginas/MiLlave';
 import { Personas } from './paginas/Personas';
 import { Verificar } from './paginas/Verificar';
+import { VerificadorLocal } from './paginas/VerificadorLocal';
 import { SesionProvider, useSesion, type Rol } from './sesion';
 
 const paginas: Record<string, ReactNode> = {
@@ -103,15 +104,7 @@ function Contenido() {
       </header>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route
-          path="/verificador"
-          element={
-            <main>
-              <h1>Verificador independiente</h1>
-              <p>Disponible próximamente.</p>
-            </main>
-          }
-        />
+        <Route path="/verificador" element={<VerificadorLocal />} />
         {enlaces.map((e) => (
           <Route
             key={e.ruta}

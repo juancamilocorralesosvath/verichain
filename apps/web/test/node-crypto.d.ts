@@ -14,3 +14,7 @@ declare module 'node:crypto' {
   ): boolean;
   export const webcrypto: Crypto;
 }
+
+declare module 'node:fs' {
+  export function readFileSync(ruta: string, codificacion: 'utf8'): string;
+}
