@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "predev": "npm run build -w @bc/core",
     "build": "tsc -p tsconfig.json && vite build",
+    "prebuild": "npm run build -w @bc/core",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "pretypecheck": "npm run build -w @bc/core",
+    "test": "vitest run",
+    "pretest": "npm run build -w @bc/core"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
@@ -22,6 +26,7 @@
     "vitest": "^5.1.0"
   },
   "dependencies": {
+    "@bc/core": "*",
     "idb-keyval": "^6.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

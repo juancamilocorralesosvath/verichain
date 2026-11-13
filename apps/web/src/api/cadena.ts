@@ -1,4 +1,5 @@
 import { solicitar } from './cliente';
+import type { ReporteCadena } from '@bc/core';
 
 export interface BloqueApi {
   indice: number;
@@ -16,4 +17,15 @@ export async function listarCadena(): Promise<BloqueApi[]> {
   const lista = await solicitar<unknown>('/cadena');
   if (!Array.isArray(lista)) throw new Error('Respuesta inesperada del servidor');
   return lista as BloqueApi[];
+}
+
+export async function verificarCadena(): Promise<ReporteCadena> {
+  const reporte = await solicitar<unknown>('/cadena/verificar');
+  if (
+    typeof reporte !== 'object' ||
+    reporte === null ||
+    !Array.isArray((reporte as ReporteCadena).bloques)
+  )
+    throw new Error('Respuesta inesperada del servidor');
+  return reporte as ReporteCadena;
 }
