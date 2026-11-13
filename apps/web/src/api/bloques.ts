@@ -10,10 +10,21 @@ export interface BorradorApi {
 export const prepararBloque = (valores: ValoresPersona): Promise<BorradorApi> =>
   solicitar<BorradorApi>('/bloques/preparar', { method: 'POST', body: JSON.stringify(valores) });
 
+export interface ResultadoConfirmar {
+  indice?: number;
+  /** Datos del minado (H10.2); pueden faltar en respuestas antiguas. */
+  nonce?: number;
+  intentos?: number;
+  ms?: number;
+}
+
 /** Paso 3: con la firma hecha en el navegador, el servidor la verifica y anexa el bloque. */
 export const confirmarBloque = (datos: {
   borrador_id: string;
   llave_id: number;
   firma_b64: string;
-}): Promise<unknown> =>
-  solicitar('/bloques/confirmar', { method: 'POST', body: JSON.stringify(datos) });
+}): Promise<ResultadoConfirmar> =>
+  solicitar<ResultadoConfirmar>('/bloques/confirmar', {
+    method: 'POST',
+    body: JSON.stringify(datos),
+  });
