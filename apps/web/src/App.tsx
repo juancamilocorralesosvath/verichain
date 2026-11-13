@@ -1,8 +1,13 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
+import { Ataques } from './paginas/Ataques';
+import { Bitacora } from './paginas/Bitacora';
 import { Cadena } from './paginas/Cadena';
+import { Exportar } from './paginas/Exportar';
+import { Llaves } from './paginas/Llaves';
 import { MiLlave } from './paginas/MiLlave';
 import { Personas } from './paginas/Personas';
+import { Usuarios } from './paginas/Usuarios';
 import { Verificar } from './paginas/Verificar';
 import { VerificadorLocal } from './paginas/VerificadorLocal';
 import { Alerta, Boton, Campo, Tarjeta } from './ui';
@@ -13,6 +18,11 @@ const paginas: Record<string, ReactNode> = {
   '/cadena': <Cadena />,
   '/mi-llave': <MiLlave />,
   '/verificar': <Verificar />,
+  '/bitacora': <Bitacora />,
+  '/exportar': <Exportar />,
+  '/usuarios': <Usuarios />,
+  '/llaves': <Llaves />,
+  '/ataques': <Ataques />,
 };
 
 const enlaces: { titulo: string; ruta: string; roles: Rol[] }[] = [
@@ -21,7 +31,7 @@ const enlaces: { titulo: string; ruta: string; roles: Rol[] }[] = [
   { titulo: 'Mi llave', ruta: '/mi-llave', roles: ['registrador'] },
   { titulo: 'Verificar', ruta: '/verificar', roles: ['auditor', 'admin'] },
   { titulo: 'Bitácora', ruta: '/bitacora', roles: ['auditor', 'admin'] },
-  { titulo: 'Exportar', ruta: '/exportar', roles: ['auditor'] },
+  { titulo: 'Exportar', ruta: '/exportar', roles: ['auditor', 'admin'] },
   { titulo: 'Usuarios', ruta: '/usuarios', roles: ['admin'] },
   { titulo: 'Llaves', ruta: '/llaves', roles: ['admin'] },
   { titulo: 'Ataques', ruta: '/ataques', roles: ['admin'] },

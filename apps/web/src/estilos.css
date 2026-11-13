@@ -227,7 +227,8 @@ header .boton-secundario:hover:not(:disabled) {
   font-size: 0.9rem;
   font-weight: 600;
 }
-input {
+input,
+select {
   font: inherit;
   min-height: 2.5rem;
   padding: var(--e2) var(--e3);

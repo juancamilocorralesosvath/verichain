@@ -55,7 +55,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H9.1](H9.1-web-base.md)                        | Web base: React + Vite, login y layout por rol                      | H0.1                                     | hecha     | Codex       |
 | [H9.2](H9.2-paginas-personas-y-cadena.md)       | Páginas Personas y Cadena                                           | H9.1, H2.2                               | hecha     | Juan Camilo |
 | [H9.3](H9.3-pagina-verificar.md)                | Página Verificar                                                    | H9.2, H2.3                               | hecha     | Alexis      |
-| [H9.4](H9.4-paginas-admin-bitacora-csv.md)      | Páginas Admin, Bitácora, CSV y Exportar (se puede hacer por partes) | H9.3, H3.3, H5.2, H6.2, H7.1, H7.2, H7.3 | en-curso  | Alexis      |
+| [H9.4](H9.4-paginas-admin-bitacora-csv.md)      | Páginas Admin, Bitácora, CSV y Exportar (se puede hacer por partes) | H9.3, H3.3, H5.2, H6.2, H7.1, H7.2, H7.3 | hecha     | Alexis      |
 | [H10.1](H10.1-sistema-visual.md)                | Sistema visual                                                      | H9.1                                     | hecha     | Alexis      |
 | [H10.2](H10.2-vista-cadena-visual.md)           | Cadena como bloques conectados                                      | H10.1, H9.3                              | hecha     | Alexis      |
 | [H10.3](H10.3-pulido-y-modo-presentacion.md)    | Pulido y modo presentación                                          | H10.1, H9.4                              | pendiente |             |

@@ -63,55 +63,27 @@ Abre `https://localhost`. Para que el navegador no avise, confía en la CA (`sec
 
 ## Demo paso a paso
 
-Todo lo siguiente sale del diseño (§9). Usa `https://localhost` (Docker) o `http://127.0.0.1:5173` (desarrollo).
+Todo lo siguiente sale del diseño (§9) y se hace desde la interfaz. Usa `https://localhost` (Docker) o
+`http://127.0.0.1:5173` (desarrollo).
 
-1. **Entrar como admin** (`ADMIN_USERNAME` / `ADMIN_PASSWORD`). Desde la página no hay aún pantallas de administración:
-   crea los usuarios por la API (en desarrollo cambia la URL por `http://localhost:3000`; con Docker añade
-   `--cacert secrets/tls/ca.crt`):
-
-   ```bash
-   URL=http://localhost:3000
-   curl -s -c admin.jar -H 'Content-Type: application/json' -d '{"username":"admin","password":"<ADMIN_PASSWORD>"}' $URL/api/auth/login
-   curl -s -b admin.jar -H 'Content-Type: application/json' -d '{"username":"ana","password":"clave-de-ana-12345","rol":"registrador"}' $URL/api/usuarios
-   curl -s -b admin.jar -H 'Content-Type: application/json' -d '{"username":"luisa","password":"clave-de-luisa-12345","rol":"auditor"}' $URL/api/usuarios
-   ```
-
-   (El login está limitado a 5 intentos por minuto por IP. `admin.jar` guarda la sesión: bórralo al terminar.)
-
+1. **Entrar como admin** (`ADMIN_USERNAME` / `ADMIN_PASSWORD`) → **Usuarios** → crea un registrador (`ana`) y un auditor
+   (`luisa`) con contraseñas de al menos 12 caracteres.
 2. **Registrador:** entra como `ana` → **Mi llave** → _Generar llave_ → _Registrar en el servidor_ (queda `pendiente`).
-3. **Admin aprueba la llave:**
-
-   ```bash
-   curl -s -b admin.jar $URL/api/llaves/pendientes          # anota el "id" de la llave de ana
-   curl -s -b admin.jar -X POST $URL/api/llaves/<id>/aprobar
-   ```
-
-4. **Agregar una persona** (como `ana`): **Personas** → llenar el formulario → _Crear persona_. El navegador firma el
-   hash con la llave privada local; el servidor verifica la firma, mina el bloque y lo anexa. Se ve el nonce y el tiempo.
+3. **Admin aprueba la llave:** **Llaves** → compara la huella con la de _Mi llave_ → _Aprobar_.
+4. **Agregar personas** (como `ana`): **Personas** → formulario → _Crear persona_. El navegador firma el hash con la
+   llave privada local; el servidor verifica la firma, mina el bloque y lo anexa (se ve el nonce, los intentos y el tiempo).
+   Para cargar muchas a la vez: **Carga masiva (CSV)** → sube `docs/ejemplos/personas.csv` (10 filas válidas y 2
+   inválidas) → _Subir y validar_ → _Firmar y anexar 10_.
 5. **Ver la cadena:** página **Cadena** (bloques conectados con hash anterior, nonce, firmante y llave).
-6. **Verificar:** como `luisa` (auditor) o admin, página **Verificar** (o el botón _Verificar cadena_ en **Cadena**) →
-   debe salir ✅ íntegra, con los 5 chequeos por bloque y el sello del servidor.
-7. **Atacar** (con `DEMO_MODE=true`, como admin; toma antes un snapshot):
-
-   ```bash
-   curl -s -b admin.jar -X POST $URL/api/demo/snapshot
-   curl -s -b admin.jar $URL/api/ataques                    # catálogo con lo que cada ataque debe detectar
-   curl -s -b admin.jar -H 'Content-Type: application/json' -d '{"indice":1}' $URL/api/ataques/modificar-dato
-   ```
-
-   Vuelve a **Verificar**: ❌ en el bloque y chequeo esperados. Prueba los cinco ataques (`modificar-dato`,
-   `modificar-cifrado`, `reescribir-cadena`, `truncar`, `reordenar`) y restaura entre uno y otro:
-
-   ```bash
-   curl -s -b admin.jar -X POST $URL/api/demo/restaurar
-   ```
-
-8. **Exportar y verificar fuera del sistema:** descarga la cadena y la llave pública del servidor y verifícalas con el
-   CLI (ver abajo) o con la página pública **Verificador independiente** (`/verificador`), que no llama al servidor.
-9. **Bitácora:** `GET /api/bitacora` (admin o auditor) registra todo lo anterior y su propia cadena de hashes es válida.
-
-> Nota: la carga masiva desde CSV (H7.1) y las pantallas de administración (H9.4) se documentan aquí cuando se
-> incorporen; hasta entonces los pasos de administración se hacen por la API como arriba.
+6. **Verificar:** como `luisa` (auditor) o admin, página **Verificar** (o _Verificar cadena_ en **Cadena**) → ✅ íntegra,
+   con los 5 chequeos por bloque y el sello del servidor.
+7. **Atacar** (con `DEMO_MODE=true`, como admin): **Ataques** → _Tomar snapshot_ → elige el índice del bloque y pulsa
+   _Ejecutar ataque_ en uno del catálogo (cada uno dice qué debería detectarlo) → _Verificar ahora_: ❌ en el bloque y el
+   chequeo esperados. Prueba los cinco ataques y usa _Restaurar demo_ entre uno y otro (pide confirmación).
+8. **Exportar y verificar fuera del sistema:** **Exportar** → descarga `cadena-….json` y `server-public.pem` (compara la
+   huella que se muestra por un canal aparte) y verifícalos con el CLI (ver abajo) o con la página pública
+   **Verificador independiente** (`/verificador`), que no llama al servidor.
+9. **Bitácora:** página **Bitácora** (admin o auditor): registra todo lo anterior y muestra si su cadena de hashes es válida.
 
 ## Guía de ataques
 

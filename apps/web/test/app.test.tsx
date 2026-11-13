@@ -6,7 +6,7 @@ import { App } from '../src/App';
 const menus: Record<string, string[]> = {
   registrador: ['Personas', 'Cadena', 'Mi llave'],
   auditor: ['Personas', 'Cadena', 'Verificar', 'Bitácora', 'Exportar'],
-  admin: ['Cadena', 'Verificar', 'Bitácora', 'Usuarios', 'Llaves', 'Ataques'],
+  admin: ['Cadena', 'Verificar', 'Bitácora', 'Exportar', 'Usuarios', 'Llaves', 'Ataques'],
 };
 afterEach(() => {
   cleanup();
