@@ -1,0 +1,13 @@
+cedula,nombre,direccion,telefono
+1020304051,Camila Restrepo,Calle 10 # 4-25 Cali,3001112201
+1020304052,Andrés Valencia,Carrera 15 # 8-40 Cali,3001112202
+1020304053,Laura Ocampo,Avenida 6N # 23-10 Cali,3001112203
+1020304054,Sebastián Muñoz,Calle 5 # 38-15 Cali,3001112204
+1020304055,Valentina Ruiz,Carrera 100 # 11-90 Cali,3001112205
+1020304056,Mateo Cárdenas,Calle 25 # 9-33 Palmira,3001112206
+1020304057,Isabella Quintero,Carrera 3 # 12-18 Yumbo,3001112207
+1020304058,Santiago Lozano,Avenida Roosevelt # 34-50 Cali,3001112208
+1020304059,Daniela Mejía,Calle 70 # 2-60 Cali,3001112209
+1020304060,Nicolás Arboleda,Carrera 42 # 5-71 Jamundí,3001112210
+12ab,Fila Inválida Cédula,Calle 1 # 2-3 Cali,3001112211
+1020304062,=HYPERLINK(http://ejemplo),Calle 1 # 2-3 Cali,3001112212

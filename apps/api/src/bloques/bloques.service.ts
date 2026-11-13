@@ -12,10 +12,16 @@ import { BitacoraService, type ContextoAuditoria } from '../bitacora/bitacora.se
 import { CadenaService } from '../cadena/cadena.service.js';
 import { verificarFirmaNode } from '../cripto/verificador-firma.node.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { CrearPersonaDto } from '../personas/dto/crear-persona.dto.js';
 import type { ConfirmarBloqueDto } from './dto/confirmar-bloque.dto.js';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { parse } from 'csv-parse/sync';
+import { CrearPersonaDto } from '../personas/dto/crear-persona.dto.js';
 
 const VIDA_DEL_BORRADOR_MS = 5 * 60_000;
+const ENCABEZADO_CSV = 'cedula,nombre,direccion,telefono';
+const MAX_FILAS = 500;
+const MAX_BYTES_POR_FILA = 4096;
 
 @Injectable()
 export class BloquesService {
@@ -31,6 +37,7 @@ export class BloquesService {
     username: string,
     datos: CrearPersonaDto,
     ctx: ContextoAuditoria,
+    auditar = true,
   ) {
     // limpieza de borradores vencidos
     await this.prisma.borrador.deleteMany({ where: { expira_en: { lt: new Date() } } });
@@ -46,13 +53,106 @@ export class BloquesService {
         expira_en: new Date(Date.now() + VIDA_DEL_BORRADOR_MS),
       },
     });
+    if (auditar)
+      await this.bitacora.registrar({
+        ...ctx,
+        accion: 'preparar_bloque',
+        resultado: 'ok',
+        detalle: `borrador ${borrador.id.slice(0, 8)}`,
+      });
+    return { borrador_id: borrador.id, hash_datos };
+  }
+
+  /**
+   * Prepara un borrador por cada fila válida de un CSV (H7.1). Usa el mismo DTO que `preparar`, así
+   * las reglas de validación son idénticas. Registra UNA entrada de bitácora por lote.
+   */
+  async prepararLote(usuarioId: number, username: string, archivo: Buffer, ctx: ContextoAuditoria) {
+    let filas: string[][];
+    try {
+      filas = parse(archivo, {
+        bom: true,
+        skip_empty_lines: true,
+        relax_column_count: true,
+        max_record_size: MAX_BYTES_POR_FILA,
+      }) as string[][];
+    } catch {
+      throw new BadRequestException('CSV inválido');
+    }
+    if (
+      filas.length < 1 ||
+      filas.length > MAX_FILAS + 1 ||
+      filas[0]?.join(',') !== ENCABEZADO_CSV
+    ) {
+      throw new BadRequestException('CSV inválido');
+    }
+    const validas: { fila: number; borrador_id: string; hash_datos: string }[] = [];
+    const invalidas: { fila: number; errores: string[] }[] = [];
+    const cedulasDelArchivo = new Set<string>();
+    for (const [indice, campos] of filas.slice(1).entries()) {
+      const fila = indice + 2; // la fila 1 es el encabezado
+      if (campos.length !== 4) {
+        invalidas.push({ fila, errores: ['Número de columnas incorrecto'] });
+        continue;
+      }
+      const dto = plainToInstance(CrearPersonaDto, {
+        cedula: campos[0],
+        nombre: campos[1],
+        direccion: campos[2],
+        telefono: campos[3],
+      });
+      const errores = (await validate(dto)).flatMap((e) => Object.values(e.constraints ?? {}));
+      if (errores.length === 0) {
+        const repetida =
+          cedulasDelArchivo.has(dto.cedula) ||
+          (await this.prisma.persona.findUnique({ where: { cedula: dto.cedula } })) !== null;
+        if (repetida) errores.push('Cédula duplicada');
+      }
+      cedulasDelArchivo.add(dto.cedula);
+      if (errores.length > 0) {
+        invalidas.push({ fila, errores });
+        continue;
+      }
+      // sin bitácora por fila: el lote registra una sola entrada al final
+      validas.push({ fila, ...(await this.preparar(usuarioId, username, dto, ctx, false)) });
+    }
     await this.bitacora.registrar({
       ...ctx,
-      accion: 'preparar_bloque',
+      accion: 'preparar_lote',
       resultado: 'ok',
-      detalle: `borrador ${borrador.id.slice(0, 8)}`,
+      detalle: `${validas.length} válidas, ${invalidas.length} inválidas`,
     });
-    return { borrador_id: borrador.id, hash_datos };
+    return { validas, invalidas };
+  }
+
+  /**
+   * Confirma los borradores en el orden recibido con las mismas reglas que `confirmar`. Si uno
+   * falla se detiene y reporta cuáles quedaron anexadas. La cadena se verifica completa UNA vez al
+   * inicio del lote (no antes de cada anexo: sería O(n²)); cada anexo sigue verificando la firma
+   * del usuario y creando su sello. Una sola entrada de bitácora por lote, al terminar.
+   */
+  confirmarLote(usuarioId: number, items: ConfirmarBloqueDto[], ctx: ContextoAuditoria) {
+    return this.cadena.serializar(async () => {
+      const anexadas: number[] = [];
+      let error: string | null = null;
+      try {
+        await this.cadena.exigirCadenaIntegra();
+        for (const item of items) {
+          const bloque = await this.confirmarEnCola(usuarioId, item, false);
+          anexadas.push(bloque.indice);
+        }
+      } catch (e) {
+        error = e instanceof HttpException ? e.message : 'Error interno';
+      }
+      // fuera de cualquier transacción: la bitácora usa la misma conexión de SQLite
+      await this.bitacora.registrar({
+        ...ctx,
+        accion: 'csv',
+        resultado: error ? 'fallo' : 'ok',
+        detalle: `bloques anexados: ${anexadas.length} de ${items.length}`,
+      });
+      return { anexadas, error };
+    });
   }
 
   /**
@@ -84,7 +184,11 @@ export class BloquesService {
   }
 
   /** Cuerpo de `confirmar`; ya corre dentro de la cola de anexos. */
-  private async confirmarEnCola(usuarioId: number, dto: ConfirmarBloqueDto) {
+  private async confirmarEnCola(
+    usuarioId: number,
+    dto: ConfirmarBloqueDto,
+    verificarCadena = true,
+  ) {
     {
       const borrador = await this.prisma.borrador.findUnique({ where: { id: dto.borrador_id } });
       // el borrador de otro usuario se trata como inexistente
@@ -103,7 +207,7 @@ export class BloquesService {
         throw new BadRequestException('Firma inválida');
       }
       // un anexo nuevo no puede "lavar" una cadena alterada: se verifica todo antes de escribir
-      await this.cadena.exigirCadenaIntegra();
+      if (verificarCadena) await this.cadena.exigirCadenaIntegra();
       const fila = JSON.parse(borrador.fila_json) as FilaPersona;
       try {
         return await this.prisma.$transaction(async (tx) => {

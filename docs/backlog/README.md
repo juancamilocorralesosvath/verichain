@@ -20,7 +20,6 @@ Para terminar a tiempo, el trabajo restante se reparte así. La guía detallada 
 
 Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 
-- **H7.1** Carga masiva CSV con firma por lotes.
 - H12.2 (el informe) conviene dejarlo para después del congelamiento del 20 de noviembre.
 
 ## Tablero
@@ -48,7 +47,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H5.4](H5.4-sello-del-servidor.md)              | Sello del servidor y cadena comprometida                            | H5.3                                     | hecha     | Juan Camilo |
 | [H6.1](H6.1-modulo-de-ataques.md)               | Módulo de simulación de ataques                                     | H5.4                                     | hecha     | Juan Camilo |
 | [H6.2](H6.2-restaurar-demo.md)                  | Snapshot y "Restaurar demo"                                         | H6.1                                     | hecha     | Juan Camilo |
-| [H7.1](H7.1-carga-csv.md)                       | Carga masiva CSV con firma por lotes                                | H5.3                                     | pendiente |             |
+| [H7.1](H7.1-carga-csv.md)                       | Carga masiva CSV con firma por lotes                                | H5.3                                     | hecha     | Alexis      |
 | [H7.2](H7.2-bitacora.md)                        | Bitácora de auditoría encadenada                                    | H3.2, H1.2                               | hecha     | Juan Camilo |
 | [H7.3](H7.3-exportar-cadena.md)                 | Exportar la cadena                                                  | H5.4                                     | hecha     | Juan Camilo |
 | [H8.1](H8.1-cli-verificador.md)                 | CLI verificador independiente                                       | H7.3                                     | hecha     | Juan Camilo |
