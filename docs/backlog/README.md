@@ -58,7 +58,7 @@ Las dependencias ya están cumplidas y se pueden hacer en paralelo:
 | [H9.4](H9.4-paginas-admin-bitacora-csv.md)      | Páginas Admin, Bitácora, CSV y Exportar (se puede hacer por partes) | H9.3, H3.3, H5.2, H6.2, H7.1, H7.2, H7.3 | hecha     | Alexis      |
 | [H10.1](H10.1-sistema-visual.md)                | Sistema visual                                                      | H9.1                                     | hecha     | Alexis      |
 | [H10.2](H10.2-vista-cadena-visual.md)           | Cadena como bloques conectados                                      | H10.1, H9.3                              | hecha     | Alexis      |
-| [H10.3](H10.3-pulido-y-modo-presentacion.md)    | Pulido y modo presentación                                          | H10.1, H9.4                              | pendiente |             |
+| [H10.3](H10.3-pulido-y-modo-presentacion.md)    | Pulido y modo presentación                                          | H10.1, H9.4                              | en-curso  | Alexis      |
 | [H11.1](H11.1-ca-propia-https.md)               | CA propia y certificado HTTPS                                       | H0.1                                     | hecha     | Codex       |
 | [H11.2](H11.2-docker-compose.md)                | Docker Compose con nginx TLS                                        | H11.1, H2.3                              | hecha     | Alexis      |
 | [H12.1](H12.1-readme.md)                        | README del proyecto                                                 | H6.2, H8.1                               | hecha     | Alexis      |
