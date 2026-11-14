@@ -97,7 +97,7 @@ function Contenido() {
   return (
     <>
       <header>
-        <h1>Verichain</h1>
+        <span className="marca">Verichain</span>
         <nav aria-label="Navegación principal">
           {usuario &&
             enlaces
