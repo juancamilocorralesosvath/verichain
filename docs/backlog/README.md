@@ -6,21 +6,19 @@ Reglas completas en [`AGENTS.md`](../../AGENTS.md). Diseño en [`docs/superpower
 
 ## Reparto (acordado el 12 de noviembre)
 
-Para terminar a tiempo, el trabajo restante se reparte así. La guía detallada para Alexis y su agente está en
-[`docs/guia-alexis.md`](../guia-alexis.md) y el prompt listo para pegar en
-[`docs/prompt-agente-alexis.md`](../prompt-agente-alexis.md).
+Estado actual: **38 de 39 historias hechas y mezcladas en `main`**. Todas las historias asignadas a Juan Camilo y Alexis, así como las de cierre técnico (H10.2, H10.3, H12.1, H12.3), están terminadas. Solo resta H12.2 (Informe final).
 
-| Quién                      | Historias                                                                                                              |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Juan Camilo** (hechas)   | H6.1, H6.2, H7.3, H8.1, H7.2, H3.3 y H4.2 (más todo lo anterior hasta H5.4)                                            |
-| **Alexis** (en este orden) | H9.3, H7.1, H8.2, H9.4, H11.2 y H10.1                                                                                  |
-| **Cierre** (cualquiera)    | H10.2, H10.3, H12.1, H12.3 y, tras el congelamiento del 20 de noviembre, H12.2 (se reparten según quién termine antes) |
+| Quién                    | Historias                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
+| **Juan Camilo** (hechas) | H6.1, H6.2, H7.3, H8.1, H7.2, H3.3 y H4.2 (más todo lo anterior hasta H5.4)                         |
+| **Alexis** (hechas)      | H9.3, H7.1, H8.2, H9.4, H11.2 y H10.1                                                               |
+| **Cierre**               | H10.2, H10.3, H12.1, H12.3 (hechas) y, tras el congelamiento del 20 de noviembre, H12.2 (pendiente) |
 
 ## Disponibles ahora
 
-Las dependencias ya están cumplidas y se pueden hacer en paralelo:
+Actualmente solo queda pendiente:
 
-- H12.2 (el informe) conviene dejarlo para después del congelamiento del 20 de noviembre.
+- [H12.2](H12.2-informe.md) (el informe final): programada para después del congelamiento del 20 de noviembre de 2026. Consulte [`docs/plan-cierre.md`](../plan-cierre.md).
 
 ## Tablero
 

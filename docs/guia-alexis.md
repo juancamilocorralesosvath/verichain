@@ -6,30 +6,17 @@
 
 ## 1. Dónde estamos
 
-**Hechas (27 historias, todas mezcladas en `main`, `npm run check` en verde):** núcleo criptográfico (E1), API base
+**Hechas (38 de 39 historias, todas mezcladas en `main`, `npm run check` en verde):** núcleo criptográfico (E1), API base
 (H2.x), autenticación, roles y usuarios (H3.1–H3.3), cifrado AES (H4.1, H4.2), llaves del usuario en el navegador y su
 registro y aprobación (H5.1, H5.2), bloques firmados preparar → firmar → confirmar (H5.3), sello del servidor (H5.4),
-módulo de ataques y restaurar demo (H6.1, H6.2), bitácora (H7.2), exportar la cadena (H7.3), CLI verificador (H8.1),
-web base, Personas y Cadena (H9.1, H9.2), CA propia (H11.1).
+módulo de ataques y restaurar demo (H6.1, H6.2), carga CSV por lotes (H7.1), bitácora (H7.2), exportar la cadena (H7.3),
+CLI verificador (H8.1), verificador local (H8.2), web base, Personas y Cadena (H9.1, H9.2), página Verificar (H9.3),
+páginas Admin, Bitácora y Exportar (H9.4), sistema visual (H10.1), cadena visual (H10.2), pulido y modo presentación (H10.3),
+CA propia (H11.1), Docker Compose con TLS (H11.2), README (H12.1) y guion de sustentación (H12.3).
 
-**Nos quedan 11 historias** (el tablero es la fuente de verdad: `docs/backlog/README.md`):
+**Solo queda 1 historia pendiente** (el tablero es la fuente de verdad: `docs/backlog/README.md`):
 
-| Tuyas (en este orden)                                           | Dependencias          | Por qué ese orden                                   |
-| --------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
-| **H9.3** Página Verificar y `<ReporteVerificacion>`             | todas hechas          | La reutilizan H8.2, H9.4 y H10.2                    |
-| **H7.1** Carga masiva CSV con firma por lotes (API + web)       | todas hechas          | La usa H9.4 (parte de CSV)                          |
-| **H8.2** Verificador web local (sin servidor)                   | todas hechas          | Usa el componente de H9.3                           |
-| **H9.4** Páginas de admin, llaves, ataques, bitácora y exportar | tras las 3 anteriores | La más grande de la web; es lo que se ve en la demo |
-| **H11.2** Docker Compose + nginx con TLS                        | todas hechas          | Independiente; se puede intercalar                  |
-| **H10.1** Sistema visual (tokens y componentes base)            | todas hechas          | Mejor al final de las funcionales, antes del pulido |
-
-| Cierre del proyecto (tú o repartido; después de lo anterior) | Dependencias                              |
-| ------------------------------------------------------------ | ----------------------------------------- |
-| **H10.2** Cadena como bloques conectados                     | H10.1 y H9.3                              |
-| **H10.3** Pulido y modo presentación                         | H10.1 y H9.4                              |
-| **H12.1** README del proyecto                                | todas hechas                              |
-| **H12.3** Guion de sustentación                              | H12.1                                     |
-| **H12.2** Informe final                                      | tras el congelamiento del 20 de noviembre |
+- **H12.2** Informe final: programada para después del congelamiento del 20 de noviembre. Ver [`docs/plan-cierre.md`](plan-cierre.md).
 
 Fechas: **congelamiento de funcionalidades el viernes 20 de noviembre** (desde ahí solo bugs), documentación el 21 y
 ensayo el 22. Entrega asumida el 23.
