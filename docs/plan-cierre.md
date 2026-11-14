@@ -45,15 +45,15 @@ profesor; confírmalo antes de empezar). Orden sugerido de trabajo:
 
 ## 3. Retoques y deuda pequeña (en este orden; cada uno cabe en un PR chico)
 
-1. **Guion de sustentación:** añadir al bloque 3 la carga del CSV de ejemplo (`docs/ejemplos/personas.csv`) si hay
-   tiempo (nota al final de `docs/sustentacion.md`).
-2. **Tablero (`docs/backlog/README.md`):** la sección «Reparto» y «Disponibles ahora» quedaron desactualizadas; deja
-   solo H12.2 como pendiente y limpia el resto. Actualiza también `docs/guia-alexis.md` (su §1 dice «27 hechas»).
-3. **Accesibilidad:** la cabecera usa un `<h1>` («Verichain») y cada página otro `<h1>`; pasa el de la cabecera a un
-   elemento no encabezado (cuidando las pruebas por rol) — anotado como pendiente menor en H10.3.
-4. **Revisión de seguridad final** (antes del congelamiento): `grep` de `dangerouslySetInnerHTML`, `any`, `$queryRaw` y
-   `style=` en `apps/`; confirmar que `.env`, `secrets/` y `*.pem` no están en git (`git ls-files | grep -E "\.env$|secrets|\.pem"`
-   solo debe devolver los fixtures de prueba); revisar que la bitácora no guarda datos personales.
+1. [x] **Guion de sustentación:** añadir al bloque 3 la carga del CSV de ejemplo (`docs/ejemplos/personas.csv`) si hay
+       tiempo (nota al final de `docs/sustentacion.md`). _(Completado en PR #36)_.
+2. [x] **Tablero (`docs/backlog/README.md`):** la sección «Reparto» y «Disponibles ahora» quedaron desactualizadas; deja
+       solo H12.2 como pendiente y limpia el resto. Actualiza también `docs/guia-alexis.md` (su §1 dice «27 hechas»). _(Completado en PR #37)_.
+3. [x] **Accesibilidad:** la cabecera usa un `<h1>` («Verichain») y cada página otro `<h1>`; pasa el de la cabecera a un
+       elemento no encabezado (cuidando las pruebas por rol) — anotado como pendiente menor en H10.3. _(Completado en PR #38 con `span.marca`)_.
+4. [x] **Revisión de seguridad final** (antes del congelamiento): `grep` de `dangerouslySetInnerHTML`, `any`, `$queryRaw` y
+       `style=` en `apps/`; confirmar que `.env`, `secrets/` y `*.pem` no están en git (`git ls-files | grep -E "\.env$|secrets|\.pem"`
+       solo debe devolver los fixtures de prueba); revisar que la bitácora no guarda datos personales. _(Verificado: 0 incidencias; fixtures limpios; timeout de API robustecido)_.
 5. **Entrega:** `git switch main && git pull`, `npm run check`, `docker compose up --build` desde cero y la lista de
    comprobación de `docs/guia-alexis.md` §9 (diseño §9, pasos 1–7).
 
