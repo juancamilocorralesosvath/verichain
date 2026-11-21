@@ -2,13 +2,7 @@
 
 **Proyecto final de Ciberseguridad — Universidad Icesi (Prof. Juan Manuel Madrid)**
 **Proyecto 7: simulación de una blockchain**
-**Equipo:** Juan Camilo y Alexis · **Versión del informe:** 21 de noviembre de 2026 (borrador)
-
-> **Estado del documento.** Borrador completo en contenido; faltan las **capturas de pantalla** (marcadores
-> `📷 CAPTURA PENDIENTE`, las toma una persona con la app corriendo), la **salida de `npm audit` del día de la entrega** y
-> confirmar el **formato** que pide el profesor (este informe está en Markdown y se puede convertir a PDF o Word).
-> Cada afirmación de seguridad cita el archivo del código o la prueba que la respalda; las rutas son relativas a la raíz
-> del repositorio.
+**Equipo:** Juan Camilo Corrales Osvath, Héctor Alexis Delgado Abril
 
 ## Contenido
 
@@ -54,10 +48,13 @@ disponibilidad) y **OT3** (buenas prácticas de codificación segura). Por eso n
 | Crear filas nuevas                                       | Formulario en **Personas** y **carga masiva CSV**.                                                                                                | `apps/web/src/paginas/Personas.tsx`, `apps/web/src/componentes/CargaCsv.tsx`; `apps/web/test/personas.test.tsx`, `apps/api/test/csv.e2e.test.ts` |
 | Verificar la integridad calculando los hashes en vivo    | `GET /api/cadena/verificar` recalcula todo desde los datos actuales y reporta, por bloque, qué chequeo falla y cuál es el **primer bloque roto**. | `packages/core/src/verificar.ts`, `apps/api/src/cadena/cadena.service.ts`; `apps/api/test/verificar.e2e.test.ts`                                 |
 
-> 📷 **CAPTURA PENDIENTE (1):** página **Cadena** con el génesis y 3 bloques conectados. _Cómo:_ sesión de cualquier rol →
-> **Cadena**.
-> 📷 **CAPTURA PENDIENTE (2):** página **Verificar** con «✅ Cadena íntegra» y los 5 chequeos por bloque. _Cómo:_ sesión de
-> auditor o admin → **Verificar** → **Verificar integridad**.
+![Página Cadena con el génesis y bloques conectados](capturas/cap1.png)
+
+_Figura 1. Página **Cadena**: el génesis y los bloques 1 y 2, unidos por conexiones («hash anterior del bloque N = hash de cadena del bloque N-1»), con nonce, firmante y llave._
+
+![Página Verificar con la cadena íntegra](capturas/cap2.png)
+
+_Figura 2. Página **Verificar**: «✅ Cadena íntegra», sello del servidor en ok y los 5 chequeos por bloque (el génesis marca «no aplica» en la firma, lo que no es una falla)._
 
 ### 1.2 Lo que se agregó de más
 
@@ -259,9 +256,13 @@ Regla de todo el proyecto: **solo librerías probadas, nada de criptografía pro
 - **Pruebas:** `tools/verificador/test/` (fixtures reales: cadena válida, alterada y otra llave),
   `apps/web/test/verificador-local.test.tsx` (incluye una prueba que espía `fetch` y comprueba que no se llama).
 
-> 📷 **CAPTURA PENDIENTE (3):** página **Verificador independiente** (`/verificador`) con «✅ Cadena íntegra» y la huella
-> de la llave fijada. _Cómo:_ sin iniciar sesión, subir `cadena.json` y `server-public.pem` exportados desde **Exportar**.
-> 📷 **CAPTURA PENDIENTE (4):** salida del CLI. _Cómo:_ `npx verificador cadena-….json --server-key server-public.pem`.
+![Página Verificador independiente con la cadena íntegra](capturas/cap3.png)
+
+_Figura 3. Página pública **Verificador independiente** (`/verificador`): se subieron `cadena.json` y `server-public.pem`; muestra la dificultad del archivo, la huella de la llave fijada y «✅ Cadena íntegra», todo en el navegador._
+
+![Salida del CLI verificador](capturas/cap4.png)
+
+_Figura 4. Salida del CLI: `npx verificador ../cadena-20261121-2134.json --server-key ../server-public.pem`, con la tabla por bloque, el sello válido y «VEREDICTO: CADENA ÍNTEGRA» (código de salida 0)._
 
 ---
 
@@ -337,11 +338,33 @@ Cada ataque tiene su prueba automática y se puede ver en vivo en la página **A
 bloques (HTTP 409 «Cadena comprometida: restaure antes de continuar»), de modo que un ataque no se "lava" agregando un
 sello nuevo (`apps/api/test/sello.e2e.test.ts`, «con la cadena alterada, confirmar da 409»).
 
-> 📷 **CAPTURAS PENDIENTES (5 a 9), una por ataque.** _Cómo:_ admin → **Ataques** → **Tomar snapshot** → índice del bloque
-> (≥ 1) → **Ejecutar ataque** → **Verificar ahora** → captura del reporte con el bloque y el chequeo en ❌ → **Restaurar demo**.
-> Orden y resultado esperado en la tabla de arriba. Para el ataque 1 hay además la versión manual:
-> `sqlite3 apps/api/data/blockchain.db "UPDATE Persona SET nombre='Mallory' WHERE id=1;"`.
-> 📷 **CAPTURA PENDIENTE (10):** página **Cadena** con el bloque atacado en rojo tras **Verificar cadena**.
+### Evidencia de los cinco ataques
+
+Cada captura es el resultado de **Verificar ahora** (o **Verificar integridad**) justo después de ejecutar el ataque.
+
+![Ataque 1, modificar-dato](capturas/cap5.png)
+
+_Figura 5. **Ataque 1, `modificar-dato`.** El bloque 1 es el primer bloque roto: **Hash de datos** y **Hash de cadena** en falla; el sello sigue en ok porque el atacante no tocó el último bloque._
+
+![Ataque 2, modificar-cifrado](capturas/cap6.png)
+
+_Figura 6. **Ataque 2, `modificar-cifrado`.** Mismo patrón en el bloque 1: **Hash de datos** y **Hash de cadena** en falla, porque el texto cifrado ya no coincide con el hash guardado (además, al descifrar falla el tag de AES-GCM)._
+
+![Ataque 3, reescribir-cadena](capturas/cap7.png)
+
+_Figura 7. **Ataque 3, `reescribir-cadena`.** Los hashes cuadran (se recalcularon y se volvió a minar), pero **Firma del usuario** falla en el bloque 1 y el **Sello del servidor** falla («El último bloque no coincide con el sello del servidor»)._
+
+![Ataque 4, truncar](capturas/cap8.png)
+
+_Figura 8. **Ataque 4, `truncar`.** Los 2 bloques que quedan están en ok, pero el **Sello del servidor** falla: «Truncamiento: el sello corresponde al bloque 2 pero la cadena termina en el bloque 1». Ningún bloque falla por sí solo._
+
+![Ataque 5, reordenar](capturas/cap9.png)
+
+_Figura 9. **Ataque 5, `reordenar`.** **Enlace con el anterior** falla en los bloques 1 y 2 («El hash anterior no coincide con el hash de cadena del bloque previo»), y el sello también falla._
+
+![Página Cadena con el bloque atacado en rojo](capturas/cap10.png)
+
+_Figura 10. Página **Cadena** tras **Verificar cadena**: el bloque 1 en rojo («✕ falla»), el resto en verde, y la conexión que lo toca resaltada._
 
 ---
 
@@ -388,23 +411,96 @@ La guía para repetirlo paso a paso, por punto de la rúbrica, está en [`docs/g
 
 ## 9. Dependencias y `npm audit`
 
-Salida de `npm audit` al **21 de noviembre de 2026** (resumen): **12 vulnerabilidades — 9 moderadas y 3 altas.**
+Salida real de los comandos, ejecutados en la raíz del repositorio el **21 de noviembre de 2026**.
+
+**Todas las dependencias** (`npm audit`): **12 vulnerabilidades, 9 moderadas y 3 altas.**
 
 ```text
-effect  <=3.22.0                       Severity: high
-  ReDoS en el regex compilado de Schema.TemplateLiteral (GHSA-7589-6fvf-x4pw)
-  └─ @prisma/config  >=6.13.0-dev.1  →  prisma  >=6.13.0-dev.1
-  fix: npm audit fix --force  (instalaría prisma@6.12.0: cambio incompatible)
+$ npm audit
+# npm audit report
 
-minimatch  7.0.0 - 11.0.0              Severity: moderate
-  DoS por amplificación de globparts (GHSA-g3hv-75wg-m249)
-  └─ @eslint/config-array, @typescript-eslint/*, typescript-eslint, eslint
-  fix: npm audit fix  (sin cambios incompatibles)
+effect  <=3.22.0
+Severity: high
+Effect: ReDoS in Schema.TemplateLiteral compiled regex - https://github.com/advisories/GHSA-7589-6fvf-x4pw
+fix available via `npm audit fix --force`
+Will install prisma@6.12.0, which is a breaking change
+node_modules/effect
+  @prisma/config  >=6.13.0-dev.1
+  Depends on vulnerable versions of effect
+  node_modules/@prisma/config
+    prisma  >=6.13.0-dev.1
+    Depends on vulnerable versions of @prisma/config
+    node_modules/prisma
+
+minimatch  7.0.0 - 11.0.0
+Severity: moderate
+minimatch has potential denial of service via globparts amplification - https://github.com/advisories/GHSA-g3hv-75wg-m249
+fix available via `npm audit fix`
+node_modules/minimatch
+  @eslint/config-array  0.23.0 - 0.23.5
+  Depends on vulnerable versions of minimatch
+  node_modules/@eslint/config-array
+  @typescript-eslint/typescript-estree  6.16.0 - 8.72.2
+  Depends on vulnerable versions of minimatch
+  node_modules/@typescript-eslint/typescript-estree
+    @typescript-eslint/parser  6.16.0 - 8.72.2
+    Depends on vulnerable versions of @typescript-eslint/typescript-estree
+    node_modules/@typescript-eslint/parser
+      typescript-eslint  <=8.72.2
+      Depends on vulnerable versions of @typescript-eslint/eslint-plugin
+      Depends on vulnerable versions of @typescript-eslint/parser
+      Depends on vulnerable versions of @typescript-eslint/typescript-estree
+      Depends on vulnerable versions of @typescript-eslint/utils
+      node_modules/typescript-eslint
+    @typescript-eslint/type-utils  6.16.0 - 8.72.2
+    Depends on vulnerable versions of @typescript-eslint/typescript-estree
+    Depends on vulnerable versions of @typescript-eslint/utils
+    node_modules/@typescript-eslint/type-utils
+      @typescript-eslint/eslint-plugin  6.16.0 - 8.72.2
+      Depends on vulnerable versions of @typescript-eslint/type-utils
+      Depends on vulnerable versions of @typescript-eslint/utils
+      node_modules/@typescript-eslint/eslint-plugin
+    @typescript-eslint/utils  6.16.0 - 8.72.2
+    Depends on vulnerable versions of @typescript-eslint/typescript-estree
+    node_modules/@typescript-eslint/utils
+  eslint  10.0.0-alpha.0 - 10.14.0
+  Depends on vulnerable versions of minimatch
+  node_modules/eslint
 
 12 vulnerabilities (9 moderate, 3 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
 ```
 
-> ⚠️ **Antes de entregar:** volver a ejecutar `npm audit` y `npm audit --omit=dev` y pegar aquí la salida de ese día.
+**Solo producción** (`npm audit --omit=dev`): **3 altas** (las de `effect` → `@prisma/config` → `prisma`). Las 9 moderadas
+desaparecen porque son solo de herramientas de desarrollo.
+
+```text
+$ npm audit --omit=dev
+# npm audit report
+
+effect  <=3.22.0
+Severity: high
+Effect: ReDoS in Schema.TemplateLiteral compiled regex - https://github.com/advisories/GHSA-7589-6fvf-x4pw
+fix available via `npm audit fix --force`
+Will install prisma@6.12.0, which is a breaking change
+node_modules/effect
+  @prisma/config  >=6.13.0-dev.1
+  Depends on vulnerable versions of effect
+  node_modules/@prisma/config
+    prisma  >=6.13.0-dev.1
+    Depends on vulnerable versions of @prisma/config
+    node_modules/prisma
+
+3 high severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+```
 
 ### 9.1 Cómo se trata cada hallazgo
 
@@ -480,9 +576,6 @@ Con Docker: `bash infra/tls/generar-ca.sh && docker compose up --build -d` (ver 
 
 - Diseño: [`docs/superpowers/specs/2026-11-09-blockchain-integridad-design.md`](../superpowers/specs/2026-11-09-blockchain-integridad-design.md)
 - Resumen de lo implementado: [`docs/resumen-proyecto.md`](../resumen-proyecto.md)
-- Guía de pruebas por rúbrica: [`docs/guia-pruebas.md`](../guia-pruebas.md)
-- Guion de sustentación: [`docs/sustentacion.md`](../sustentacion.md)
-- Backlog y estado: [`docs/backlog/README.md`](../backlog/README.md)
 
 ### 12.3 Historias de trabajo (backlog)
 
