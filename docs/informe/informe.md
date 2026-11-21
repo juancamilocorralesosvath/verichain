@@ -2,11 +2,7 @@
 
 **Proyecto final de Ciberseguridad — Universidad Icesi (Prof. Juan Manuel Madrid)**
 **Proyecto 7: simulación de una blockchain**
-**Equipo:** Juan Camilo y Alexis · **Versión del informe:** 21 de noviembre de 2026 (borrador)
-
-> **Estado del documento.** Contenido completo, con capturas y la salida real de `npm audit` del 21 de noviembre de 2026. Falta confirmar el **formato** que pide el profesor (este informe está en Markdown y se puede convertir a PDF o
-> Word) y la lectura final del equipo. Cada afirmación de seguridad cita el archivo del código o la prueba que la
-> respalda; las rutas son relativas a la raíz del repositorio.
+**Equipo:** Juan Camilo Corrales Osvath, Héctor Alexis Delgado Abril
 
 ## Contenido
 
