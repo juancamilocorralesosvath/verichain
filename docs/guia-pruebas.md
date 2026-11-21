@@ -28,6 +28,14 @@ calculando los hashes en vivo y comparándolos con los almacenados.
 npm run check
 ```
 
+Para probar solo una parte (útil si algo falla):
+
+```bash
+npm run test -w @bc/core                                  # hashes, PoW, verificación
+npm run test -w @bc/api -- --run test/sello.e2e.test.ts   # un archivo de la API (p. ej. sello, ataques, csv, roles)
+npm run test -w @bc/web                                   # interfaz
+```
+
 **Esperado:** termina sin errores (código de salida 0). Hoy son 102 pruebas en `@bc/core`, 244 en `@bc/api`,
 163 en `@bc/web` y 15 en `@bc/verificador`. En la salida del API aparece una traza de `PruebaController.error`: es una
 prueba que provoca un error a propósito, no un fallo.
@@ -209,22 +217,110 @@ redirige a `https://` (301); la salud responde `{"ok":true,…}`; la cookie de s
 accesible por el puerto 3000 desde el host; `docker compose exec api id -u` ≠ 0. Al terminar:
 `docker compose down -v` (borra la BD).
 
-## I. Lista de comprobación final
+## I. Modo presentación y accesibilidad (H10.2 y H10.3)
 
-| #   | Comprobación                                                                                 | ✔   |
-| --- | -------------------------------------------------------------------------------------------- | --- |
-| 1   | `npm run check` en verde en `main` limpio y sincronizado                                     |     |
-| 2   | Arranca con un solo bloque (génesis) (A1)                                                    |     |
-| 3   | Crear filas nuevas agrega un bloque por registro (A2)                                        |     |
-| 4   | Cada bloque tiene su `hash_datos` y su `hash_cadena`, encadenados (A3)                       |     |
-| 5   | Verificar recalcula en vivo y da ✅ en una cadena sana (A4)                                  |     |
-| 6   | Alterar un dato en la BD se detecta con el bloque y el chequeo correctos (A5)                |     |
-| 7   | Roles: cada rol ve solo lo suyo; el auditor no ve datos personales (B2–B4)                   |     |
-| 8   | Cookie `HttpOnly` + `SameSite=Strict`; login limitado a 5 por minuto (B5–B6)                 |     |
-| 9   | Dirección y teléfono cifrados en la BD (C1)                                                  |     |
-| 10  | Entradas inválidas rechazadas con errores genéricos; sin XSS ni SQL injection (C2–C4)        |     |
-| 11  | Firma inválida rechazada; llaves aprobadas por el admin (D2–D3)                              |     |
-| 12  | Los 5 ataques se detectan en el bloque y chequeo esperados y «Restaurar demo» recupera (E)   |     |
-| 13  | CLI y `/verificador` dan el mismo resultado que el servidor; detectan la cadena alterada (F) |     |
-| 14  | Bitácora registra todo y su cadena es válida; CSV de ejemplo: 10 válidas y 2 inválidas (G)   |     |
-| 15  | `docker compose up` → `https://localhost` sin advertencia, login y flujo completo (H)        |     |
+1. **Interruptor.** El botón **Modo presentación** está en la cabecera de **todas** las páginas, también sin sesión
+   (`/verificador`, `/login`). **Esperado:** apagado por defecto (`aria-pressed` en falso).
+2. **Activarlo.** **Esperado:** el texto, los títulos, los hashes y el veredicto se agrandan, el contenido se ensancha y el
+   botón queda marcado como activo. **Recarga la página (F5):** sigue activado (se recuerda en el navegador). Vuelve a
+   pulsarlo: todo regresa al tamaño normal.
+3. **Ataques en modo presentación.** Como admin con `DEMO_MODE=true`: **Ataques**. Con el modo **apagado** cada ataque
+   muestra la línea «Debería detectarlo: …»; con el modo **activado** muestra una tarjeta amarilla **«Qué se espera
+   detectar»** por ataque.
+4. **Tamaños.** Con las herramientas del navegador (F12 → modo dispositivo) prueba **1280×720** (proyector) y **375 px**
+   (móvil), con el modo presentación apagado y encendido, recorriendo **Cadena, Verificar, Ataques, Bitácora, Exportar,
+   Usuarios y Llaves**. **Esperado:** la página **no** se desplaza en horizontal (las tablas y la lista de bloques tienen su
+   propio desplazamiento) y nada queda cortado.
+5. **Teclado.** Con la tecla Tab recorre una página: **esperado:** siempre se ve el foco (anillo azul) y se llega a
+   «Modo presentación», al menú y a los botones.
+6. **Un solo `<h1>` por página.** En la consola del navegador: `document.querySelectorAll('h1').length` → **1** (la cabecera
+   usa `span.marca`, no un `h1`).
+7. **Bloques conectados (H10.2).** En **Cadena** pulsa **Verificar cadena** (admin o auditor): con la cadena sana todos los
+   bloques salen en verde; tras un ataque, el bloque atacado sale en **rojo** y las **conexiones** que lo tocan también;
+   con el ataque «Intercambiar dos bloques» la conexión rota se resalta con «Enlace roto…». Con **30 o más** bloques la
+   lista sigue legible y tiene su propio desplazamiento. Al crear una persona se ve «Minando el bloque…» y luego el nonce,
+   los intentos y los milisegundos.
+
+## J. Revisión estática de seguridad y dependencias
+
+**J1. Patrones prohibidos** (desde la raíz del repositorio):
+
+```bash
+grep -rn "dangerouslySetInnerHTML" apps/web/src                                      # sin resultados
+grep -rn "style=" apps/web/src                                                       # sin resultados (la CSP no permite estilos en línea)
+grep -rn "queryRawUnsafe\|executeRawUnsafe" apps/api/src --include=*.ts --exclude-dir=generated
+npm run lint                                                                         # el linter prohíbe eval, new Function y any
+```
+
+**Esperado:** los dos primeros no imprimen nada; el tercero imprime **solo** el comentario de
+`apps/api/src/prisma/prisma.service.ts` («…nunca $queryRawUnsafe»); el lint pasa.
+
+**J2. Secretos fuera del repositorio.**
+
+```bash
+git ls-files | grep -E "(^|/)\.env$|secrets/|\.pem$|\.key$"
+```
+
+**Esperado:** solo dos fixtures **públicos** de prueba (`tools/verificador/test/fixtures/otra-llave-public.pem` y
+`server-public.pem`). Ni `.env`, ni `apps/api/secrets/`, ni `secrets/tls/`.
+
+**J3. Dependencias (`npm audit`).**
+
+```bash
+npm audit
+npm audit --omit=dev
+```
+
+**Esperado (21 de nov. de 2026):** **12 vulnerabilidades (9 moderadas y 3 altas)**. Las 3 altas son `effect` →
+`@prisma/config` → `prisma` (aparecen también con `--omit=dev` porque `prisma` migra la BD al arrancar el contenedor); las
+9 moderadas son `minimatch` en `eslint`/`typescript-eslint` (solo desarrollo). Todas están **documentadas y con su
+tratamiento** en el informe (§9). **No uses `npm audit fix --force`:** bajaría Prisma a 6.12 y rompería el adaptador de
+SQLite. Si el número cambia, actualiza el informe.
+
+## K. El informe (H12.2): comprobar antes de entregar
+
+El borrador está en [`informe/informe.md`](informe/informe.md).
+
+| #   | Qué comprobar                                                                                                                       | Esperado                                                                                                                                                |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| K1  | Ábrelo en GitHub (rama o PR)                                                                                                        | Los **2 diagramas** (componentes y secuencia) se dibujan; las tablas se ven bien.                                                                       |
+| K2  | **Las rutas que cita existen** (comando debajo de la tabla)                                                                         | Solo nombres cortos o archivos que no están versionados: `auth.service.ts`, `canonico.ts`, `schema.prisma`, `cadena.json`, `server-public.pem`, `.csv`. |
+| K3  | Las cifras del informe coinciden con la realidad: pruebas (**524** = 102 + 244 + 163 + 15), `npm audit` (12: 9 moderadas y 3 altas) | Iguales a las de §1 y J3 de esta guía.                                                                                                                  |
+| K4  | **Capturas:** `grep -n "CAPTURA" docs/informe/informe.md`                                                                           | Al entregar **no debe quedar ninguna** (hoy hay 10 pendientes, numeradas del 1 al 10).                                                                  |
+| K5  | Datos de la portada, nota sobre el uso de IA (§10) y la mención de la Ley 1581 de 2012                                              | Revisados por los dos integrantes.                                                                                                                      |
+| K6  | Formato                                                                                                                             | Confirmado con el profesor (PDF o Word si lo exige; se convierte desde el `.md`).                                                                       |
+
+Comando de K2 (desde la raíz):
+
+```bash
+grep -o '`[A-Za-z0-9_./-]*\.\(ts\|tsx\|mjs\|sh\|md\|yml\|conf\|prisma\|json\|csv\|pem\)`' docs/informe/informe.md \
+  | tr -d '`' | sort -u | while read f; do
+    [ -e "$f" ] || [ -e "apps/api/src/$f" ] || [ -e "apps/api/$f" ] || echo "NO EXISTE: $f"
+  done
+```
+
+## L. Lista de comprobación final
+
+| #   | Comprobación                                                                                                    | ✔   |
+| --- | --------------------------------------------------------------------------------------------------------------- | --- |
+| 1   | `npm run check` en verde en `main` limpio y sincronizado                                                        |     |
+| 2   | Arranca con un solo bloque (génesis) (A1)                                                                       |     |
+| 3   | Crear filas nuevas agrega un bloque por registro (A2)                                                           |     |
+| 4   | Cada bloque tiene su `hash_datos` y su `hash_cadena`, encadenados (A3)                                          |     |
+| 5   | Verificar recalcula en vivo y da ✅ en una cadena sana (A4)                                                     |     |
+| 6   | Alterar un dato en la BD se detecta con el bloque y el chequeo correctos (A5)                                   |     |
+| 7   | Roles: cada rol ve solo lo suyo; el auditor no ve datos personales (B2–B4)                                      |     |
+| 8   | Cookie `HttpOnly` + `SameSite=Strict`; login limitado a 5 por minuto (B5–B6)                                    |     |
+| 9   | Dirección y teléfono cifrados en la BD (C1)                                                                     |     |
+| 10  | Entradas inválidas rechazadas con errores genéricos; sin XSS ni SQL injection (C2–C4)                           |     |
+| 11  | Firma inválida rechazada; llaves aprobadas por el admin (D2–D3)                                                 |     |
+| 12  | Los 5 ataques se detectan en el bloque y chequeo esperados y «Restaurar demo» recupera (E)                      |     |
+| 13  | CLI y `/verificador` dan el mismo resultado que el servidor; detectan la cadena alterada (F)                    |     |
+| 14  | Bitácora registra todo y su cadena es válida; CSV de ejemplo: 10 válidas y 2 inválidas (G)                      |     |
+| 15  | `docker compose up` → `https://localhost` sin advertencia, login y flujo completo (H)                           |     |
+| 16  | Modo presentación: se activa, se recuerda al recargar y en **Ataques** muestra «Qué se espera detectar» (I1–I3) |     |
+| 17  | 1280×720 y 375 px sin desplazamiento horizontal; foco visible; un solo `<h1>` (I4–I6)                           |     |
+| 18  | Cadena: bloques conectados, rojo tras un ataque, «Minando el bloque…» al crear (I7)                             |     |
+| 19  | Sin patrones prohibidos ni secretos en git (J1–J2)                                                              |     |
+| 20  | `npm audit`: 12 (9 moderadas y 3 altas), todas documentadas en el informe (J3)                                  |     |
+| 21  | El informe: diagramas, rutas, cifras y capturas revisados (K1–K6)                                               |     |
